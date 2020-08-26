@@ -57,8 +57,8 @@ deriving-mul {suc i} {x} {y} ix iy = gen ix iy
 deriving-inv : { i : ℕ } → { x  : Carrier } → deriving i x → deriving i ( x ⁻¹ )
 deriving-inv {zero} {x} (lift tt) = lift tt
 deriving-inv {suc i} {ε} uni = ccong lemma3 uni
-deriving-inv {suc i} {_} (comm x x₁ )   = ccong (lemma4 _ _) (comm x₁ x) where
-deriving-inv {suc i} {_} (gen x x₁ )    = ccong (lemma5 _ _ ) ( gen (deriving-inv x₁) (deriving-inv x)) where
+deriving-inv {suc i} {_} (comm x x₁ )   = ccong (lemma4 _ _) (comm x₁ x) 
+deriving-inv {suc i} {_} (gen x x₁ )    = ccong (lemma5 _ _ ) ( gen (deriving-inv x₁) (deriving-inv x)) 
 deriving-inv {suc i} {x} (ccong eq ix ) = ccong (⁻¹-cong eq) ( deriving-inv ix )
 
 idcomtr : (g  : Carrier ) → [ g , ε  ] ≈ ε 

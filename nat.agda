@@ -7,6 +7,7 @@ open import Data.Empty
 open import Relation.Nullary
 open import  Relation.Binary.PropositionalEquality
 open import  Relation.Binary.Core
+open import Relation.Binary.Definitions
 open import  logic
 
 

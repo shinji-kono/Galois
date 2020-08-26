@@ -13,7 +13,7 @@ open import Function.Equality using (Π)
 open import Data.Nat -- using (ℕ; suc; zero; s≤s ; z≤n )
 open import Data.Nat.Properties -- using (<-trans)
 open import Relation.Binary.PropositionalEquality 
-open import Data.List using (List; []; _∷_ ; length ; _++_ ; head ) renaming (reverse to rev )
+open import Data.List using (List; []; _∷_ ; length ; _++_ ; head ; tail ) renaming (reverse to rev )
 open import nat
 
 open import Symmetric
@@ -22,6 +22,7 @@ open import Symmetric
 open import Relation.Nullary
 open import Data.Empty
 open import  Relation.Binary.Core
+open import  Relation.Binary.Definitions
 open import fin
 
 -- An inductive construction of permutation
@@ -127,13 +128,81 @@ pins {suc (suc n)} {suc m} (s≤s m<n) =  pins1 (suc m) (suc (suc n)) lem0 where
     pins1 zero _ _ = pid
     pins1 (suc i) (suc j) (s≤s si≤n) = psawpim {suc (suc (suc n))} {j}  (s≤s (s≤s si≤n))  ∘ₚ  pins1 i j (≤-trans si≤n refl-≤s ) 
 
+plist1 : {n  : ℕ} → Permutation (suc n) (suc n) → (i : ℕ ) → i < suc n → List ℕ
+plist1  {n} perm zero _           = toℕ ( perm ⟨$⟩ˡ (fromℕ< {zero} (s≤s z≤n))) ∷ []
+plist1  {n} perm (suc i) (s≤s lt) = toℕ ( perm ⟨$⟩ˡ (fromℕ< (s≤s lt)))         ∷ plist1 perm  i (<-trans lt a<sa) 
+
 plist  : {n  : ℕ} → Permutation n n → List ℕ
 plist {0} perm = []
-plist {suc j} perm = rev (plist1 j a<sa) where
-    n = suc j
-    plist1 : (i : ℕ ) → i < n → List ℕ
-    plist1  zero _           = toℕ ( perm ⟨$⟩ˡ (fromℕ≤ {zero} (s≤s z≤n))) ∷ []
-    plist1  (suc i) (s≤s lt) = toℕ ( perm ⟨$⟩ˡ (fromℕ≤ (s≤s lt)))         ∷ plist1  i (<-trans lt a<sa) 
+plist {suc n} perm = rev (plist1 perm n a<sa) 
+
+plist2 : {n  : ℕ} → Permutation (suc n) (suc n) → (i : ℕ ) → i < suc n → List ℕ
+plist2  {n} perm zero _           = toℕ ( perm ⟨$⟩ʳ (fromℕ< {zero} (s≤s z≤n))) ∷ []
+plist2  {n} perm (suc i) (s≤s lt) = toℕ ( perm ⟨$⟩ʳ (fromℕ< (s≤s lt)))         ∷ plist2 perm  i (<-trans lt a<sa) 
+
+plist0  : {n  : ℕ} → Permutation n n → List ℕ
+plist0 {0} perm = []
+plist0 {suc n} perm = plist2 perm n a<sa
+
+open _=p=_
+
+←pleq  : {n  : ℕ} → (x y : Permutation n n ) → x =p= y → plist0 x ≡ plist0 y 
+←pleq {zero} x y eq = refl
+←pleq {suc n} x y eq =  ←pleq1  n a<sa where
+   ←pleq1  :   (i : ℕ ) → (i<sn : i < suc n ) →  plist2 x i i<sn ≡ plist2 y i i<sn
+   ←pleq1  zero _           = cong ( λ k → toℕ k ∷ [] ) ( peq eq (fromℕ< {zero} (s≤s z≤n)))
+   ←pleq1  (suc i) (s≤s lt) = cong₂ ( λ j k → toℕ j ∷ k ) ( peq eq (fromℕ< (s≤s lt)))  ( ←pleq1  i (<-trans lt a<sa) )
+
+headeq : {A : Set } →  {x y : A } → {xt yt : List A } → (x ∷ xt)  ≡ (y ∷ yt)  →  x ≡ y
+headeq refl = refl
+
+taileq : {A : Set } →  {x y : A } → {xt yt : List A } → (x ∷ xt)  ≡ (y ∷ yt)  →  xt ≡ yt
+taileq refl = refl
+
+pleq  : {n  : ℕ} → (x y : Permutation n n ) → plist0 x ≡ plist0 y → x =p= y
+pleq  {0} x y refl = record { peq = λ q → pleq0 q } where
+  pleq0 : (q : Fin 0 ) → (x ⟨$⟩ʳ q) ≡ (y ⟨$⟩ʳ q)
+  pleq0 ()
+pleq  {suc n} x y eq = record { peq = λ q → pleq1 n a<sa eq q fin<n } where
+  pleq1 : (i : ℕ ) → (i<sn : i < suc n ) →  plist2 x i i<sn ≡ plist2 y i i<sn → (q : Fin (suc n)) → toℕ q < suc i → x ⟨$⟩ʳ q ≡ y ⟨$⟩ʳ q
+  pleq1 zero i<sn eq q q<i with  <-cmp (toℕ q) zero
+  ... | tri< () ¬b ¬c
+  ... | tri> ¬a ¬b c = ⊥-elim (nat-≤> c q<i )
+  ... | tri≈ ¬a b ¬c = begin
+          x ⟨$⟩ʳ q
+       ≡⟨ cong ( λ k → x ⟨$⟩ʳ k ) (toℕ-injective b )⟩
+          x ⟨$⟩ʳ zero
+       ≡⟨ toℕ-injective (headeq eq) ⟩
+          y ⟨$⟩ʳ zero
+       ≡⟨ cong ( λ k → y ⟨$⟩ʳ k ) (sym (toℕ-injective b )) ⟩
+          y ⟨$⟩ʳ q
+       ∎ where
+          open ≡-Reasoning
+  pleq1 (suc i) (s≤s i<sn) eq q q<i with <-cmp (toℕ q) (suc i)
+  ... | tri< a ¬b ¬c = pleq1 i (<-trans i<sn a<sa ) (taileq eq) q a
+  ... | tri> ¬a ¬b c = ⊥-elim (nat-≤> c q<i )
+  ... | tri≈ ¬a b ¬c = begin
+            x ⟨$⟩ʳ q
+       ≡⟨ cong (λ k → x ⟨$⟩ʳ k) (pleq3 b) ⟩
+            x ⟨$⟩ʳ (suc (fromℕ< i<sn))
+       ≡⟨ toℕ-injective pleq2  ⟩
+            y ⟨$⟩ʳ (suc (fromℕ< i<sn))
+       ≡⟨ cong (λ k → y ⟨$⟩ʳ k) (sym (pleq3 b)) ⟩
+            y ⟨$⟩ʳ q
+       ∎ where
+          open ≡-Reasoning
+          pleq3 : toℕ q ≡ suc i → q ≡ suc (fromℕ< i<sn)
+          pleq3 tq=si = toℕ-injective ( begin
+                  toℕ  q
+               ≡⟨ b ⟩
+                  suc i
+               ≡⟨ sym (toℕ-fromℕ< (s≤s i<sn)) ⟩
+                  toℕ (fromℕ< (s≤s i<sn))
+               ≡⟨⟩
+                  toℕ (suc (fromℕ< i<sn))
+               ∎ ) where open ≡-Reasoning
+          pleq2 : toℕ ( x ⟨$⟩ʳ (suc (fromℕ< i<sn)) ) ≡ toℕ ( y ⟨$⟩ʳ (suc (fromℕ< i<sn)) )
+          pleq2 = headeq eq
 
 data  FL : (n : ℕ )→ Set where
    f0 :  FL 0 
@@ -261,7 +330,7 @@ perm→FL {suc n} perm = (perm ⟨$⟩ʳ (# 0)) :: perm→FL (remove (# 0) perm)
 
 -- t5 = plist t4 ∷ plist ( t4  ∘ₚ flip (pins ( n≤  3 ) ))
 t5 = plist (t4) ∷ plist (flip t4)
-    ∷ ( toℕ (t4 ⟨$⟩ˡ fromℕ≤ a<sa) ∷ [] )
+    ∷ ( toℕ (t4 ⟨$⟩ˡ fromℕ< a<sa) ∷ [] )
     ∷ ( toℕ (t4 ⟨$⟩ʳ (# 0)) ∷ [] )
     -- ∷  plist ( t4  ∘ₚ flip (pins ( n≤  1 ) ))
     ∷  plist (remove (# 0) t4  )
@@ -289,7 +358,7 @@ lem2 i≤n = ≤-trans i≤n ( refl-≤s )
 ∀-FL  x  = fls6 x  where
    fls4 :  ( i n : ℕ ) → (i<n : i ≤ n ) → FL  n → List (FL  (suc n))  → List (FL  (suc n)) 
    fls4 zero n i≤n perm x = (zero :: perm ) ∷ x
-   fls4 (suc i) n i≤n  perm x = fls4 i n (≤-trans refl-≤s i≤n ) perm ((fromℕ≤ (s≤s i≤n) :: perm ) ∷ x)
+   fls4 (suc i) n i≤n  perm x = fls4 i n (≤-trans refl-≤s i≤n ) perm ((fromℕ< (s≤s i≤n) :: perm ) ∷ x)
    fls5 :  ( n : ℕ ) → List (FL n) → List (FL  (suc n))  → List (FL (suc n)) 
    fls5 n [] x = x
    fls5 n (h ∷ x) y = fls5  n x (fls4 n n lem0 h y)
@@ -313,4 +382,4 @@ all-perm n = pls6 n where
    pls6 (suc n) =  pls5 (suc n) (rev (pls6 n) ) []   -- rev to put id first
 
 pls : (n : ℕ ) → List (List ℕ )
-pls n = Data.List.map plist (all-perm n) where
+pls n = Data.List.map plist (all-perm n) 
