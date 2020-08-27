@@ -102,6 +102,12 @@ test4 f g = _≡_.refl
        mpf p (mpf q (mpf r ε))
     ∎ where open EqReasoning (Algebra.Group.setoid G)
 
+grepl : { x y0 y1 z  : Carrier } → x ∙ y0 ≈ y1  → x ∙ ( y0 ∙ z ) ≈ y1 ∙ z 
+grepl eq = gtrans (gsym (assoc _ _ _ )) (∙-cong eq grefl )
+
+grm : { x y0 y1 z  : Carrier } → x ∙ y0 ≈ ε  → x ∙ ( y0 ∙ z ) ≈  z 
+grm eq = gtrans ( gtrans (gsym (assoc _ _ _ )) (∙-cong eq grefl )) ( proj₁ identity _ )
+
 -- ∙-flattenl : {x : Carrier } → (m : MP x ) → x ≈ mp-flattenl m
 -- ∙-flattenl (am x) = gsym (proj₂ identity _)
 -- ∙-flattenl (q o am x) with ∙-flattenl q    -- x₁ ∙ x ≈ mpl q (am x o am ε) ,  t : x₁ ≈ mpl q (am ε)

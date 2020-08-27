@@ -54,6 +54,20 @@ peqˡ {p} {x} {y} eq q = begin
        y ⟨$⟩ˡ q
    ∎ where open ≡-Reasoning
 
+presp : { p : ℕ } {x y u v : Permutation p p } → x =p= y → u =p= v → (x ∘ₚ u) =p= (y ∘ₚ v)
+presp {p} {x} {y} {u} {v} x=y u=v = record { peq = λ q → lemma4 q } where
+   lemma4 : (q : Fin p) → ((x ∘ₚ u) ⟨$⟩ʳ q) ≡ ((y ∘ₚ v) ⟨$⟩ʳ q)
+   lemma4 q = trans (cong (λ k → Inverse.to u Π.⟨$⟩ k) (peq x=y q) ) (peq u=v _ )
+passoc : { p : ℕ } (x y z : Permutation p p) → ((x ∘ₚ y) ∘ₚ z) =p=  (x ∘ₚ (y ∘ₚ z))
+passoc x y z = record { peq = λ q → refl }
+p-inv : { p : ℕ } {i j : Permutation p p} →  i =p= j → (q : Fin p) → pinv i ⟨$⟩ʳ q ≡ pinv j ⟨$⟩ʳ q
+p-inv {p} {i} {j} i=j q = begin
+   i ⟨$⟩ˡ q                      ≡⟨ cong (λ k → i ⟨$⟩ˡ k) (sym (inverseʳ j)  )  ⟩
+   i ⟨$⟩ˡ ( j ⟨$⟩ʳ ( j ⟨$⟩ˡ q )) ≡⟨ cong (λ k  →  i ⟨$⟩ˡ k) (sym (peq i=j _ ))  ⟩
+   i ⟨$⟩ˡ ( i ⟨$⟩ʳ ( j ⟨$⟩ˡ q )) ≡⟨ inverseˡ i  ⟩
+   j ⟨$⟩ˡ q
+   ∎ where open ≡-Reasoning
+
 Symmetric : ℕ → Group  Level.zero Level.zero
 Symmetric p = record {
       Carrier        = Permutation p p
@@ -69,18 +83,5 @@ Symmetric p = record {
        ; inverse   = ( (λ x → record { peq = λ q → inverseʳ x} ) , (λ x → record { peq = λ q → inverseˡ x} ))  
        ; ⁻¹-cong   = λ i=j → record { peq = λ q → p-inv i=j q }
       }
-   } where
-       presp : {x y u v : Permutation p p } → x =p= y → u =p= v → (x ∘ₚ u) =p= (y ∘ₚ v)
-       presp {x} {y} {u} {v} x=y u=v = record { peq = λ q → lemma4 q } where
-           lemma4 : (q : Fin p) → ((x ∘ₚ u) ⟨$⟩ʳ q) ≡ ((y ∘ₚ v) ⟨$⟩ʳ q)
-           lemma4 q = trans (cong (λ k → Inverse.to u Π.⟨$⟩ k) (peq x=y q) ) (peq u=v _ )
-       passoc : (x y z : Permutation p p) → ((x ∘ₚ y) ∘ₚ z) =p=  (x ∘ₚ (y ∘ₚ z))
-       passoc x y z = record { peq = λ q → refl }
-       p-inv : {i j : Permutation p p} →  i =p= j → (q : Fin p) → pinv i ⟨$⟩ʳ q ≡ pinv j ⟨$⟩ʳ q
-       p-inv {i} {j} i=j q = begin
-           i ⟨$⟩ˡ q                      ≡⟨ cong (λ k → i ⟨$⟩ˡ k) (sym (inverseʳ j)  )  ⟩
-           i ⟨$⟩ˡ ( j ⟨$⟩ʳ ( j ⟨$⟩ˡ q )) ≡⟨ cong (λ k  →  i ⟨$⟩ˡ k) (sym (peq i=j _ ))  ⟩
-           i ⟨$⟩ˡ ( i ⟨$⟩ʳ ( j ⟨$⟩ˡ q )) ≡⟨ inverseˡ i  ⟩
-           j ⟨$⟩ˡ q
-           ∎ where open ≡-Reasoning
+   } 
 

@@ -146,6 +146,9 @@ plist0 {suc n} perm = plist2 perm n a<sa
 
 open _=p=_
 
+--
+-- plist cong
+--
 ←pleq  : {n  : ℕ} → (x y : Permutation n n ) → x =p= y → plist0 x ≡ plist0 y 
 ←pleq {zero} x y eq = refl
 ←pleq {suc n} x y eq =  ←pleq1  n a<sa where
@@ -159,6 +162,9 @@ headeq refl = refl
 taileq : {A : Set } →  {x y : A } → {xt yt : List A } → (x ∷ xt)  ≡ (y ∷ yt)  →  xt ≡ yt
 taileq refl = refl
 
+--
+-- plist equalizer 
+--
 pleq  : {n  : ℕ} → (x y : Permutation n n ) → plist0 x ≡ plist0 y → x =p= y
 pleq  {0} x y refl = record { peq = λ q → pleq0 q } where
   pleq0 : (q : Fin 0 ) → (x ⟨$⟩ʳ q) ≡ (y ⟨$⟩ʳ q)
@@ -203,6 +209,48 @@ pleq  {suc n} x y eq = record { peq = λ q → pleq1 n a<sa eq q fin<n } where
                ∎ ) where open ≡-Reasoning
           pleq2 : toℕ ( x ⟨$⟩ʳ (suc (fromℕ< i<sn)) ) ≡ toℕ ( y ⟨$⟩ʳ (suc (fromℕ< i<sn)) )
           pleq2 = headeq eq
+
+pprep-cong : {n  : ℕ} → {x y : Permutation n n } → x =p= y → pprep x =p= pprep y
+pprep-cong {n} {x} {y} x=y = record { peq = pprep-cong1 } where
+   pprep-cong1 : (q : Fin (suc n)) → (pprep x ⟨$⟩ʳ q) ≡ (pprep y ⟨$⟩ʳ q)
+   pprep-cong1 zero = refl
+   pprep-cong1 (suc q) = begin
+          pprep x ⟨$⟩ʳ suc q
+        ≡⟨⟩
+          suc ( x ⟨$⟩ʳ q )
+        ≡⟨ cong ( λ k → suc k ) ( peq x=y q ) ⟩
+          suc ( y ⟨$⟩ʳ q )
+        ≡⟨⟩
+          pprep y ⟨$⟩ʳ suc q
+        ∎  where open ≡-Reasoning
+
+pprep-dist : {n  : ℕ} → {x y : Permutation n n } → pprep (x ∘ₚ y) =p= (pprep x ∘ₚ pprep y)
+pprep-dist {n} {x} {y} = record { peq = pprep-dist1 } where
+   pprep-dist1 : (q : Fin (suc n)) → (pprep (x ∘ₚ y) ⟨$⟩ʳ q) ≡ ((pprep x ∘ₚ pprep y) ⟨$⟩ʳ q)
+   pprep-dist1 zero = refl
+   pprep-dist1 (suc q) =  cong ( λ k → suc k ) refl
+
+pswap-cong : {n  : ℕ} → {x y : Permutation n n } → x =p= y → pswap x =p= pswap y
+pswap-cong {n} {x} {y} x=y = record { peq = pswap-cong1 } where
+   pswap-cong1 : (q : Fin (suc (suc n))) → (pswap x ⟨$⟩ʳ q) ≡ (pswap y ⟨$⟩ʳ q)
+   pswap-cong1 zero = refl
+   pswap-cong1 (suc zero) = refl
+   pswap-cong1 (suc (suc q)) = begin
+          pswap x ⟨$⟩ʳ suc (suc q)
+        ≡⟨⟩
+          suc (suc (x ⟨$⟩ʳ q))
+        ≡⟨ cong ( λ k → suc (suc k) ) ( peq x=y q ) ⟩
+          suc (suc (y ⟨$⟩ʳ q))
+        ≡⟨⟩
+          pswap y ⟨$⟩ʳ suc (suc q)
+        ∎  where open ≡-Reasoning
+ 
+pswap-dist : {n  : ℕ} → {x y : Permutation n n } → pprep (pprep (x ∘ₚ y)) =p= (pswap x ∘ₚ pswap y)
+pswap-dist {n} {x} {y} = record { peq = pswap-dist1 } where
+   pswap-dist1 : (q : Fin (suc (suc n))) → ((pprep (pprep (x ∘ₚ y))) ⟨$⟩ʳ q) ≡ ((pswap x ∘ₚ pswap y) ⟨$⟩ʳ q)
+   pswap-dist1 zero = refl
+   pswap-dist1 (suc zero) = refl
+   pswap-dist1 (suc (suc q)) =  cong ( λ k → suc (suc k) ) refl
 
 data  FL : (n : ℕ )→ Set where
    f0 :  FL 0 

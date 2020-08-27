@@ -2,7 +2,7 @@ module logic where
 
 open import Level
 open import Relation.Nullary
-open import Relation.Binary
+open import Relation.Binary hiding (_⇔_ )
 open import Data.Empty
 
 
