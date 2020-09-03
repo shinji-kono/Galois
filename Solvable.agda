@@ -28,6 +28,12 @@ deriving : ( i : ℕ ) → Carrier → Set (Level.suc n ⊔ m)
 deriving 0 x = Lift (Level.suc n ⊔ m) ⊤
 deriving (suc i) x = Commutator (deriving i) x 
 
+open import Relation.Binary.HeterogeneousEquality as HE using (_≅_ )
+
+deriving-subst : { i : ℕ } → {x y : Carrier } → x ≈ y → (dx : deriving i x ) → deriving i y 
+deriving-subst {zero} {x} {y} x=y dx = lift tt
+deriving-subst {suc i} {x} {y} x=y dx = ccong x=y dx
+
 record solvable : Set (Level.suc n ⊔ m) where
   field 
      dervied-length : ℕ

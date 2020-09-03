@@ -28,26 +28,29 @@ solvable.end sym2solvable x d = solved x d where
    open Solvable (Symmetric 2)
    -- open Group (Symmetric 2) using (_⁻¹)
 
+
    p0 :  FL→perm ((# 0) :: ((# 0 ) :: f0)) =p= pid
-   p0 = record { peq = p00 } where
-      p00 : (q : Fin 2) → (FL→perm ((# 0) :: ((# 0) :: f0)) ⟨$⟩ʳ q) ≡ (pid ⟨$⟩ʳ q)
-      p00 zero = refl
-      p00 (suc zero) = refl
+   p0 = pleq _ _ refl
 
-   p1 :  Permutation 2 2
-   p1 =  FL→perm ((# 1) :: ((# 0 ) :: f0)) 
+   p0r :  perm→FL pid ≡  ((# 0) :: ((# 0 ) :: f0)) 
+   p0r = refl
 
-   p1rev : (p1  ∘ₚ  p1 ) =p= pid
-   p1rev = record { peq = p01 } where
-      p01 : (q : Fin 2) → ((p1 ∘ₚ p1) ⟨$⟩ʳ q) ≡ (pid ⟨$⟩ʳ q)
-      p01 zero = refl
-      p01 (suc zero) = refl
+   p1 :  FL→perm ((# 1) :: ((# 0 ) :: f0)) =p= pswap pid
+   p1 = pleq _ _ refl
+
+   p1r :  perm→FL (pswap pid) ≡  ((# 1) :: ((# 0 ) :: f0)) 
+   p1r = refl
+
+   -- FL→iso : (fl : FL 2 )  → perm→FL ( FL→perm fl ) ≡ fl
+   -- FL→iso  (zero :: (zero :: f0)) = refl
+   -- FL→iso ((suc zero) :: (zero :: f0)) = refl
 
    open _=p=_
-   
+   open ≡-Reasoning
+
    sym2lem0 :  ( g h : Permutation 2 2 ) → (q : Fin 2)  → ([ g , h ]  ⟨$⟩ʳ q) ≡ (pid ⟨$⟩ʳ q)
-   sym2lem0 g h q with perm→FL g | perm→FL h | inspect perm→FL g
-   sym2lem0 g h q | zero :: (zero :: f0) | _ | record { eq = g=00} = begin
+   sym2lem0 g h q with perm→FL g | perm→FL h | inspect perm→FL g | inspect perm→FL h
+   sym2lem0 g h q | zero :: (zero :: f0) | _ | record { eq = g=00} | record { eq = h=00}  = begin
              [ g , h ]  ⟨$⟩ʳ q
            ≡⟨⟩
               h ⟨$⟩ʳ  (g ⟨$⟩ʳ ( h ⟨$⟩ˡ ( g ⟨$⟩ˡ q ))) 
@@ -59,41 +62,39 @@ solvable.end sym2solvable x d = solved x d where
              [ pid , h ]  ⟨$⟩ʳ q
            ≡⟨ peq (idcomtl h) q ⟩
              q
-          ∎ where
-            open ≡-Reasoning
-            postulate sym2lem1 :  g =p= pid
-            -- it works but very slow
-            -- sym2lem1 = ptrans  (psym ( FL←iso g )) (subst (λ k → FL→perm k =p= pid) (sym g=00) p0 ) 
-   sym2lem0 g h q | _ | zero :: (zero :: f0) | record { eq = g=00} = begin
+           ∎ where
+             sym2lem1 :  g =p= pid
+             sym2lem1 = FL-inject  g=00
+   sym2lem0 g h q | _ | zero :: (zero :: f0) | record { eq = g=00} | record { eq = h=00} = begin
              [ g , h ]  ⟨$⟩ʳ q
            ≡⟨⟩
               h ⟨$⟩ʳ  (g ⟨$⟩ʳ ( h ⟨$⟩ˡ ( g ⟨$⟩ˡ q ))) 
            ≡⟨ peq sym2lem2 _   ⟩
               pid ⟨$⟩ʳ  (g ⟨$⟩ʳ ( h ⟨$⟩ˡ ( g ⟨$⟩ˡ q ))) 
-           ≡⟨ cong (λ k → pid ⟨$⟩ʳ  (g ⟨$⟩ʳ k)) ((peqˡ sym2lem2 _ )) ⟩
+           ≡⟨ cong (λ k → pid ⟨$⟩ʳ  (g ⟨$⟩ʳ k)) (peqˡ sym2lem2 _ ) ⟩
               pid ⟨$⟩ʳ  (g ⟨$⟩ʳ ( pid ⟨$⟩ˡ ( g ⟨$⟩ˡ q ))) 
            ≡⟨⟩
              [ g , pid ]  ⟨$⟩ʳ q
            ≡⟨ peq (idcomtr g) q ⟩
              q
           ∎ where
-            open ≡-Reasoning
-            postulate sym2lem2 :  h =p= pid
-   sym2lem0 g h q | suc zero :: (zero :: f0) | suc zero :: (zero :: f0) | _ = begin
+             sym2lem2 :  h =p= pid
+             sym2lem2 = FL-inject h=00
+   sym2lem0 g h q | suc zero :: (zero :: f0) | suc zero :: (zero :: f0) | record { eq = g=00} | record { eq = h=00}= begin
              [ g , h ]  ⟨$⟩ʳ q
            ≡⟨⟩
               h ⟨$⟩ʳ  (g ⟨$⟩ʳ ( h ⟨$⟩ˡ ( g ⟨$⟩ˡ q ))) 
-           ≡⟨ peq sym2lem3  _ ⟩
-              pid ⟨$⟩ʳ ( h ⟨$⟩ˡ ( g ⟨$⟩ˡ q )) 
-           ≡⟨ cong (λ k → pid  ⟨$⟩ʳ k) (peq sym2lem4  _ )⟩
-              pid ⟨$⟩ʳ ( pid  ⟨$⟩ˡ q ) 
-           ≡⟨⟩
+           ≡⟨ peq (psym g=h ) _  ⟩
+              g ⟨$⟩ʳ  (g ⟨$⟩ʳ ( h ⟨$⟩ˡ ( g ⟨$⟩ˡ q ))) 
+           ≡⟨ cong (λ k →   g ⟨$⟩ʳ  (g ⟨$⟩ʳ  k) ) (peqˡ (psym g=h) _)  ⟩
+              g ⟨$⟩ʳ  (g ⟨$⟩ʳ ( g ⟨$⟩ˡ ( g ⟨$⟩ˡ q ))) 
+           ≡⟨ cong (λ k → g  ⟨$⟩ʳ k) ( inverseʳ g )  ⟩
+              g ⟨$⟩ʳ  ( g ⟨$⟩ˡ q ) 
+           ≡⟨ inverseʳ g   ⟩
              q
           ∎ where
-            open ≡-Reasoning
-            postulate
-              sym2lem3 :  (g  ∘ₚ  h ) =p= pid
-              sym2lem4 :  (pinv g   ∘ₚ pinv h ) =p= pid
+              g=h :  g =p= h
+              g=h =  FL-inject (trans g=00 (sym h=00))
    solved :  (x : Permutation 2 2) → Commutator  (λ x₁ → Lift (Level.suc Level.zero) ⊤) x → x =p= pid
    solved x uni = prefl
    solved x (comm {g} {h} _ _) = record { peq = sym2lem0 g h  } 
@@ -118,8 +119,6 @@ solvable.end sym2solvable x d = solved x d where
              q
           ∎ where open ≡-Reasoning
 
--- ¬sym5solvable : ¬ ( solvable (Symmetric 5) )
--- ¬sym5solvable sol = {!!}
 
 
 

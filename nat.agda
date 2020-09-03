@@ -34,6 +34,10 @@ refl-≤s : {x : ℕ } → x ≤ suc x
 refl-≤s {zero} = z≤n
 refl-≤s {suc x} = s≤s (refl-≤s {x})
 
+a≤sa : {x : ℕ } → x ≤ suc x
+a≤sa {zero} = z≤n
+a≤sa {suc x} = s≤s (a≤sa {x})
+
 =→¬< : {x : ℕ  } → ¬ ( x < x )
 =→¬< {zero} ()
 =→¬< {suc x} (s≤s lt) = =→¬< lt
@@ -307,3 +311,21 @@ minus-* {suc m} {k} {n} lt | tri> ¬a ¬b c = begin
                          suc (suc k * suc m)
                       ∎   where open ≤-Reasoning
              open ≡-Reasoning
+
+open import Data.List
+
+ℕL-inject : {h h1 : ℕ } {x y : List ℕ } → h ∷ x ≡ h1 ∷ y → h ≡ h1
+ℕL-inject refl = refl
+
+ℕL-inject-t : {h h1 : ℕ } {x y : List ℕ } → h ∷ x ≡ h1 ∷ y → x ≡ y
+ℕL-inject-t refl = refl
+
+ℕL-eq? : (x y : List ℕ ) → Dec (x ≡ y )
+ℕL-eq? [] [] = yes refl
+ℕL-eq? [] (x ∷ y) = no (λ ())
+ℕL-eq? (x ∷ x₁) [] = no (λ ())
+ℕL-eq? (h ∷ x) (h1 ∷ y) with h ≟ h1 | ℕL-eq? x y
+... | yes y1 | yes y2 = yes ( cong₂ (λ j k → j ∷ k ) y1 y2 )
+... | yes y1 | no n = no (λ e → n (ℕL-inject-t e))
+... | no n  | t = no (λ e → n (ℕL-inject e)) 
+
