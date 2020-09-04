@@ -418,6 +418,8 @@ pswap-dist {n} {x} {y} = record { peq = pswap-dist1 } where
    pswap-dist1 (suc zero) = refl
    pswap-dist1 (suc (suc q)) =  cong ( λ k → suc (suc k) ) refl
 
+infixr  100 _::_
+
 data  FL : (n : ℕ )→ Set where
    f0 :  FL 0 
    _::_ :  { n : ℕ } → Fin (suc n ) → FL n → FL (suc n)

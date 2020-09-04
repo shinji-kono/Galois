@@ -43,6 +43,8 @@ record solvable : Set (Level.suc n ⊔ m) where
 
 import Relation.Binary.Reasoning.Setoid as EqReasoning
 
+open EqReasoning (Algebra.Group.setoid G)
+
 lemma4 : (g h : Carrier ) → [ h , g ] ≈ [ g , h ] ⁻¹
 lemma4 g h = begin
        [ h , g ]                               ≈⟨ grefl ⟩
@@ -54,7 +56,7 @@ lemma4 g h = begin
        h ⁻¹ ∙ (g ⁻¹ ∙   h ⁻¹ ∙ g) ⁻¹           ≈⟨ lemma5 (g ⁻¹ ∙ h ⁻¹ ∙ g) h ⟩
        (g ⁻¹ ∙ h ⁻¹ ∙   g ∙ h) ⁻¹              ≈⟨ grefl ⟩
        [ g , h ]  ⁻¹                  
-     ∎ where open EqReasoning (Algebra.Group.setoid G)
+     ∎ 
 
 deriving-mul : { i : ℕ } → { x y : Carrier } → deriving i x → deriving i y  → deriving i ( x ∙ y )
 deriving-mul {zero} {x} {y} _ _ = lift tt
@@ -74,7 +76,7 @@ idcomtr g  = begin
        (g ⁻¹   ∙   g ∙ ε     )                ≈⟨ ∙-cong (proj₁ inverse _ )   grefl ⟩
        (  ε  ∙ ε     )                        ≈⟨  proj₂ identity _  ⟩
        ε
-     ∎ where open EqReasoning (Algebra.Group.setoid G)
+     ∎ 
 
 idcomtl : (g  : Carrier ) → [ ε ,  g ] ≈ ε 
 idcomtl g  = begin
@@ -83,4 +85,23 @@ idcomtl g  = begin
        (ε  ∙ g  ⁻¹ ∙    g )                  ≈⟨ ∙-cong (proj₁ identity _) grefl ⟩
        (g ⁻¹   ∙    g     )                ≈⟨  proj₁ inverse _ ⟩
        ε
-     ∎ where open EqReasoning (Algebra.Group.setoid G)
+     ∎ 
+
+comm-refl : {f g : Carrier } → f ≈ g  → [ f ,  g ] ≈ ε 
+comm-refl {f} {g} f=g = begin
+       f ⁻¹ ∙ g ⁻¹ ∙   f ∙ g
+     ≈⟨ ∙-cong (∙-cong (∙-cong (⁻¹-cong f=g ) grefl ) f=g ) grefl ⟩
+       g ⁻¹ ∙ g ⁻¹ ∙   g ∙ g
+     ≈⟨ ∙-cong (assoc _ _ _ ) grefl  ⟩
+       g ⁻¹ ∙ (g ⁻¹ ∙   g ) ∙ g
+     ≈⟨ ∙-cong (∙-cong grefl (proj₁ inverse _) ) grefl ⟩
+       g ⁻¹ ∙ ε  ∙ g 
+     ≈⟨ ∙-cong (proj₂ identity _) grefl  ⟩
+       g ⁻¹ ∙  g 
+     ≈⟨  proj₁ inverse _  ⟩
+       ε
+     ∎ 
+
+comm-resp : {g h g1 h1  : Carrier } → g ≈ g1  → h ≈ h1 → [ g , h ] ≈ [ g1 , h1 ] 
+comm-resp {g} {h} {g1} {h1} g=g1 h=h1 =  ∙-cong (∙-cong (∙-cong (⁻¹-cong g=g1 ) (⁻¹-cong h=h1 )) g=g1 ) h=h1
+
