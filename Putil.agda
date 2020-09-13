@@ -68,8 +68,6 @@ pswap {n} perm = permutation p→ p← record { left-inverse-of = piso→ ; righ
    piso→ (suc zero) = refl
    piso→ (suc (suc x)) = cong (λ k → suc (suc k) ) (inverseˡ perm) 
 
--- enumeration
-
 psawpn : {n : ℕ} → 1 < n → Permutation n n
 psawpn {suc zero}  (s≤s ())
 psawpn {suc n} (s≤s (s≤s x)) = pswap pid 
@@ -105,16 +103,16 @@ plist  : {n  : ℕ} → Permutation n n → List ℕ
 plist {0} perm = []
 plist {suc n} perm = rev (plist1 perm n a<sa) 
 
--- pconcat :  {n m : ℕ } → Permutation  m m → Permutation n n → Permutation (m + n)  (m + n) 
--- pconcat {n} {m} p q = pfill {n + m} {m} ? p ∘ₚ ?
-
--- inductivley enmumerate permutations
+-- 
 --    from n-1 length create n length inserting new element at position m
-
+--
 -- 0 ∷ 1 ∷ 2 ∷ 3 ∷ []                               -- 0 ∷ 1 ∷ 2 ∷ 3 ∷ [] 
 -- 1 ∷ 0 ∷ 2 ∷ 3 ∷ []    plist ( pins {3} (n≤ 1) )     1 ∷ 0 ∷ 2 ∷ 3 ∷ []
 -- 1 ∷ 2 ∷ 0 ∷ 3 ∷ []    plist ( pins {3} (n≤ 2) )     2 ∷ 0 ∷ 1 ∷ 3 ∷ []
 -- 1 ∷ 2 ∷ 3 ∷ 0 ∷ []    plist ( pins {3} (n≤ 3) )     3 ∷ 0 ∷ 1 ∷ 2 ∷ []
+--
+-- defined by pprep and pswap
+--
 -- pins  : {n m : ℕ} → m ≤ n → Permutation (suc n) (suc n)
 -- pins {_} {zero} _ = pid
 -- pins {suc _} {suc zero} _ = pswap pid
@@ -259,6 +257,9 @@ perm1 {p} {q} = ⟪ perm01 _ _ , perm00 _ _ ⟫ where
    perm00 zero zero | zero = refl
 
 
+----
+--  find insertion point of pins
+----
 p=0 : {n : ℕ }  → (perm : Permutation (suc n) (suc n) ) → ((perm ∘ₚ flip (pins (toℕ≤pred[n] (perm ⟨$⟩ʳ (# 0))))) ⟨$⟩ˡ (# 0)) ≡ # 0
 p=0 {zero} perm with ((perm ∘ₚ flip (pins (toℕ≤pred[n] (perm ⟨$⟩ʳ (# 0))))) ⟨$⟩ˡ (# 0)) 
 ... | zero = refl
@@ -285,6 +286,9 @@ p=0 {suc n} perm with perm ⟨$⟩ʳ (# 0) | inspect (_⟨$⟩ʳ_ perm ) (# 0)| 
                 (perm ⟨$⟩ʳ (# 0))
              ∎ )
 
+----
+--  other elements are preserved in pins
+----
 px=x : {n : ℕ }  → (x : Fin (suc n)) → pins ( toℕ≤pred[n] x ) ⟨$⟩ʳ (# 0) ≡ x
 px=x {n} zero = refl
 px=x {suc n} (suc x) = p001 where
@@ -325,7 +329,9 @@ taileq : {A : Set } →  {x y : A } → {xt yt : List A } → (x ∷ xt)  ≡ (y
 taileq refl = refl
 
 --
--- plist equalizer 
+-- plist injection / equalizer 
+--
+--    if plist0 of two perm looks the same, the permutations are the same
 --
 pleq  : {n  : ℕ} → (x y : Permutation n n ) → plist0 x ≡ plist0 y → x =p= y
 pleq  {0} x y refl = record { peq = λ q → pleq0 q } where
@@ -424,6 +430,44 @@ data  FL : (n : ℕ )→ Set where
    f0 :  FL 0 
    _::_ :  { n : ℕ } → Fin (suc n ) → FL n → FL (suc n)
 
+data _f<_  : {n : ℕ } (x : FL n ) (y : FL n)  → Set  where
+   f<n : {m : ℕ } {xn yn : Fin (suc m) } {xt yt : FL m} → xn Data.Fin.< yn →   (xn :: xt) f< ( yn :: yt )
+   f<t : {m : ℕ } {xn : Fin (suc m) } {xt yt : FL m} → xt f< yt →   (xn :: xt) f< ( xn :: yt )
+
+_f≤_ : {n : ℕ } (x : FL n ) (y : FL n)  → Set
+_f≤_ x y = (x ≡ y ) ∨  (x f< y )
+
+FLeq : {n : ℕ } {xn yn : Fin (suc n)} {x : FL n } {y : FL n}  → xn :: x ≡ yn :: y → ( xn ≡ yn ) ∧ (x ≡ y )
+FLeq refl = record { proj1 = refl ; proj2  = refl }
+
+f<> :  {n : ℕ } {x : FL n } {y : FL n}  → x f< y → y f< x → ⊥
+f<> (f<n x) (f<n x₁) = nat-<> x x₁
+f<> (f<n x) (f<t lt2) = nat-≡< refl x
+f<> (f<t lt) (f<n x) = nat-≡< refl x
+f<> (f<t lt) (f<t lt2) = f<> lt lt2
+
+f-≡< :  {n : ℕ } {x : FL n } {y : FL n}  → x ≡ y → y f< x → ⊥
+f-≡< refl (f<n x) = nat-≡< refl x
+f-≡< refl (f<t lt) = f-≡< refl lt 
+
+FLcmp : {n : ℕ } → Trichotomous {Level.zero} {FL n}  _≡_  _f<_
+FLcmp f0 f0 = tri≈ (λ ()) refl (λ ())
+FLcmp (xn :: xt) (yn :: yt) with <-fcmp xn yn
+... | tri< a ¬b ¬c = tri< (f<n a) (λ eq → nat-≡< (cong toℕ (proj1 (FLeq eq)) ) a) (λ lt  → f<> lt (f<n a) )
+... | tri> ¬a ¬b c = tri> (λ lt  → f<> lt (f<n c) ) (λ eq → nat-≡< (cong toℕ (sym (proj1 (FLeq eq)) )) c) (f<n c)
+... | tri≈ ¬a refl ¬c with FLcmp xt yt
+... | tri< a ¬b ¬c₁ = tri< (f<t a) (λ eq → ¬b (proj2 (FLeq eq) )) (λ lt  → f<> lt (f<t a) )
+... | tri≈ ¬a₁ refl ¬c₁ = tri≈ (λ lt → f-≡< refl lt )  refl (λ lt → f-≡< refl lt )
+... | tri> ¬a₁ ¬b c = tri> (λ lt  → f<> lt (f<t c) ) (λ eq → ¬b (proj2 (FLeq eq) )) (f<t c)
+
+infixr 250 _f<?_
+
+_f<?_ : {n  : ℕ} → (x y : FL n ) → Dec (x f< y )
+x f<? y with FLcmp x y
+... | tri< a ¬b ¬c = yes a
+... | tri≈ ¬a refl ¬c = no ( ¬a )
+... | tri> ¬a ¬b c = no ( ¬a )
+
 shlem→ : {n  : ℕ} → (perm : Permutation (suc n) (suc n) ) → (p0=0 : perm ⟨$⟩ˡ (# 0) ≡ # 0 ) → (x : Fin (suc n) ) →  perm ⟨$⟩ˡ x ≡ zero → x ≡ zero
 shlem→ perm p0=0 x px=0 = begin
           x                                  ≡⟨ sym ( inverseʳ perm ) ⟩
@@ -431,7 +475,7 @@ shlem→ perm p0=0 x px=0 = begin
           perm ⟨$⟩ʳ zero                     ≡⟨ cong (λ k →  perm ⟨$⟩ʳ k ) (sym p0=0) ⟩
           perm ⟨$⟩ʳ ( perm ⟨$⟩ˡ zero)        ≡⟨ inverseʳ perm  ⟩
           zero
-       ∎ where open ≡-Reasoning
+       ∎ 
 
 shlem← : {n  : ℕ} → (perm : Permutation (suc n) (suc n) ) → (p0=0 : perm ⟨$⟩ˡ (# 0) ≡ # 0 ) → (x : Fin (suc n)) → perm ⟨$⟩ʳ x ≡ zero → x ≡ zero
 shlem← perm p0=0 x px=0 =  begin
@@ -439,7 +483,7 @@ shlem← perm p0=0 x px=0 =  begin
           perm ⟨$⟩ˡ ( perm ⟨$⟩ʳ x )          ≡⟨ cong (λ k →  perm ⟨$⟩ˡ k ) px=0 ⟩
           perm ⟨$⟩ˡ zero                     ≡⟨ p0=0  ⟩
           zero
-       ∎ where open ≡-Reasoning
+       ∎ 
 
 sh2 : {n  : ℕ} → (perm : Permutation (suc n) (suc n) ) → (p0=0 : perm ⟨$⟩ˡ (# 0) ≡ # 0 ) → {x : Fin n} → ¬ perm ⟨$⟩ˡ (suc x) ≡ zero
 sh2 perm p0=0 {x} eq with shlem→ perm p0=0 (suc x) eq
@@ -580,6 +624,9 @@ perm→FL   : {n : ℕ }  → Permutation n n → FL n
 perm→FL {zero} perm = f0
 perm→FL {suc n} perm = (perm ⟨$⟩ʳ (# 0)) :: perm→FL (shrink (perm ∘ₚ flip (pins (toℕ≤pred[n] (perm ⟨$⟩ʳ (# 0))))) (p=0 perm) ) 
 -- perm→FL {suc n} perm = (perm ⟨$⟩ʳ (# 0)) :: perm→FL (remove (# 0) perm)  
+
+_p<_ : {n : ℕ } ( x y : Permutation n n ) → Set
+x p< y = perm→FL x f<  perm→FL y
 
 pcong-pF : {n : ℕ }  → {x y : Permutation n n}  → x =p= y → perm→FL x ≡ perm→FL y
 pcong-pF {zero} eq = refl

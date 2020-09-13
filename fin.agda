@@ -3,6 +3,7 @@
 module fin where
 
 open import Data.Fin hiding (_<_ ; _≤_ )
+open import Data.Fin.Properties hiding ( <-trans )
 open import Data.Nat
 open import logic
 open import nat
@@ -31,6 +32,9 @@ fin≤n {suc n} (suc f) = s≤s (fin≤n {n} f)
 pred<n : {n : ℕ} {f : Fin (suc n)} → n > 0  → Data.Nat.pred (toℕ f) < n
 pred<n {suc n} {zero} (s≤s z≤n) = s≤s z≤n
 pred<n {suc n} {suc f} (s≤s z≤n) = fin<n
+
+fin<asa : {n : ℕ} → toℕ (fromℕ< {n} a<sa) ≡ n
+fin<asa = toℕ-fromℕ< nat.a<sa
 
 -- fromℕ<-toℕ
 toℕ→from : {n : ℕ} {x : Fin (suc n)} → toℕ x ≡ n → fromℕ n ≡ x
