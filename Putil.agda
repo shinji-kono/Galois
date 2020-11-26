@@ -13,7 +13,7 @@ open import Function.LeftInverse  using ( _LeftInverseOf_ )
 open import Function.Equality using (Π)
 open import Data.Nat -- using (ℕ; suc; zero; s≤s ; z≤n )
 open import Data.Nat.Properties -- using (<-trans)
-open import Relation.Binary.PropositionalEquality 
+open import Relation.Binary.PropositionalEquality hiding ( [_] )
 open import Data.List using (List; []; _∷_ ; length ; _++_ ; head ; tail ) renaming (reverse to rev )
 open import nat
 
@@ -197,7 +197,7 @@ pins {suc n} {suc m} (s≤s  m≤n) = permutation p← p→  record { left-inver
             p11 : fromℕ< (≤-trans (fin<n {_} {y}) a≤sa ) ≡ suc x
             p11 = begin
                fromℕ< (≤-trans (fin<n {_} {y}) a≤sa )
-              ≡⟨ fromℕ<-irrelevant _ _ p12 _ (s≤s (fin<n {suc n}))  ⟩
+              ≡⟨ lemma10  p12  ⟩
                suc (fromℕ< (fin<n {suc n} {x} )) 
               ≡⟨ cong suc (fromℕ<-toℕ x _ ) ⟩
                suc x
@@ -278,7 +278,7 @@ p=0 {suc n} perm with perm ⟨$⟩ʳ (# 0) | inspect (_⟨$⟩ʳ_ perm ) (# 0)| 
           p004 = p003  (fromℕ< (s≤s (s≤s m≤n))) (
              begin
                 fromℕ< (s≤s (s≤s m≤n))
-             ≡⟨  fromℕ<-irrelevant _ _ (cong suc meq) (s≤s (s≤s m≤n)) (subst (λ k →  suc k < suc (suc n)) meq (s≤s (s≤s m≤n)) ) ⟩
+             ≡⟨  lemma10  (cong suc meq) {s≤s (s≤s m≤n)} {subst (λ k →  suc k < suc (suc n)) meq (s≤s (s≤s m≤n)) } ⟩
                 fromℕ< (subst (λ k →  suc k < suc (suc n)) meq (s≤s (s≤s m≤n)) )
              ≡⟨ fromℕ<-toℕ {suc (suc n)} (suc t) (subst (λ k →  suc k < suc (suc n)) meq (s≤s (s≤s m≤n)) ) ⟩
                 suc t
@@ -424,50 +424,6 @@ pswap-dist {n} {x} {y} = record { peq = pswap-dist1 } where
    pswap-dist1 (suc zero) = refl
    pswap-dist1 (suc (suc q)) =  cong ( λ k → suc (suc k) ) refl
 
-infixr  100 _::_
-
-data  FL : (n : ℕ )→ Set where
-   f0 :  FL 0 
-   _::_ :  { n : ℕ } → Fin (suc n ) → FL n → FL (suc n)
-
-data _f<_  : {n : ℕ } (x : FL n ) (y : FL n)  → Set  where
-   f<n : {m : ℕ } {xn yn : Fin (suc m) } {xt yt : FL m} → xn Data.Fin.< yn →   (xn :: xt) f< ( yn :: yt )
-   f<t : {m : ℕ } {xn : Fin (suc m) } {xt yt : FL m} → xt f< yt →   (xn :: xt) f< ( xn :: yt )
-
-_f≤_ : {n : ℕ } (x : FL n ) (y : FL n)  → Set
-_f≤_ x y = (x ≡ y ) ∨  (x f< y )
-
-FLeq : {n : ℕ } {xn yn : Fin (suc n)} {x : FL n } {y : FL n}  → xn :: x ≡ yn :: y → ( xn ≡ yn ) ∧ (x ≡ y )
-FLeq refl = record { proj1 = refl ; proj2  = refl }
-
-f<> :  {n : ℕ } {x : FL n } {y : FL n}  → x f< y → y f< x → ⊥
-f<> (f<n x) (f<n x₁) = nat-<> x x₁
-f<> (f<n x) (f<t lt2) = nat-≡< refl x
-f<> (f<t lt) (f<n x) = nat-≡< refl x
-f<> (f<t lt) (f<t lt2) = f<> lt lt2
-
-f-≡< :  {n : ℕ } {x : FL n } {y : FL n}  → x ≡ y → y f< x → ⊥
-f-≡< refl (f<n x) = nat-≡< refl x
-f-≡< refl (f<t lt) = f-≡< refl lt 
-
-FLcmp : {n : ℕ } → Trichotomous {Level.zero} {FL n}  _≡_  _f<_
-FLcmp f0 f0 = tri≈ (λ ()) refl (λ ())
-FLcmp (xn :: xt) (yn :: yt) with <-fcmp xn yn
-... | tri< a ¬b ¬c = tri< (f<n a) (λ eq → nat-≡< (cong toℕ (proj1 (FLeq eq)) ) a) (λ lt  → f<> lt (f<n a) )
-... | tri> ¬a ¬b c = tri> (λ lt  → f<> lt (f<n c) ) (λ eq → nat-≡< (cong toℕ (sym (proj1 (FLeq eq)) )) c) (f<n c)
-... | tri≈ ¬a refl ¬c with FLcmp xt yt
-... | tri< a ¬b ¬c₁ = tri< (f<t a) (λ eq → ¬b (proj2 (FLeq eq) )) (λ lt  → f<> lt (f<t a) )
-... | tri≈ ¬a₁ refl ¬c₁ = tri≈ (λ lt → f-≡< refl lt )  refl (λ lt → f-≡< refl lt )
-... | tri> ¬a₁ ¬b c = tri> (λ lt  → f<> lt (f<t c) ) (λ eq → ¬b (proj2 (FLeq eq) )) (f<t c)
-
-infixr 250 _f<?_
-
-_f<?_ : {n  : ℕ} → (x y : FL n ) → Dec (x f< y )
-x f<? y with FLcmp x y
-... | tri< a ¬b ¬c = yes a
-... | tri≈ ¬a refl ¬c = no ( ¬a )
-... | tri> ¬a ¬b c = no ( ¬a )
-
 shlem→ : {n  : ℕ} → (perm : Permutation (suc n) (suc n) ) → (p0=0 : perm ⟨$⟩ˡ (# 0) ≡ # 0 ) → (x : Fin (suc n) ) →  perm ⟨$⟩ˡ x ≡ zero → x ≡ zero
 shlem→ perm p0=0 x px=0 = begin
           x                                  ≡⟨ sym ( inverseʳ perm ) ⟩
@@ -595,6 +551,8 @@ shrink-cong {n} {x} {y} x=y x=0 y=0  = record  { peq = p002 } where
         p003 : suc px ≡ suc py → px ≡ py
         p003 refl = refl
 
+open import FLutil
+
 FL→perm   : {n : ℕ }  → FL n → Permutation n n 
 FL→perm f0 = pid
 FL→perm (x :: fl) = pprep (FL→perm fl)  ∘ₚ pins ( toℕ≤pred[n] x )
@@ -718,6 +676,7 @@ FL-inject {n} {g} {h} g=h = record { peq = λ q → ( begin
         h ⟨$⟩ʳ q
      ∎  ) }
 
+-- FLpid : (n : ℕ) → (x : Permutation n n) → perm→FL x ≡ FL0 → x =p= pid
 
 lem2 : {i n : ℕ } → i ≤ n → i ≤ suc n
 lem2 i≤n = ≤-trans i≤n ( a≤sa )

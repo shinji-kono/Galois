@@ -13,6 +13,7 @@ open import Data.Product
 
 open import Gutil 
 open import Putil 
+open import FLutil 
 open import Solvable using (solvable)
 open import  Relation.Binary.PropositionalEquality hiding ( [_] )
 
@@ -122,7 +123,7 @@ solvable.end sym3solvable x d = solved1 x d where
    ... | (zero :: (suc zero) :: (zero :: f0 )) | ((suc (suc zero)) :: (suc zero) :: (zero :: f0))| record { eq = ge } |  record { eq = he } =   
            case2 (case1 (ptrans (comm-resp (pFL g ge) (pFL h he)) (FL-inject refl) ))
    ... | ((suc zero) :: (zero :: (zero :: f0 ))) | (zero :: (suc zero) :: (zero :: f0 )) | record { eq = ge } |  record { eq = he } = 
-            case2 (case1 (ptrans (comm-resp (pFL g ge) (pFL h he)) (FL-inject refl) ))
+          case2 (case1 (ptrans (comm-resp (pFL g ge) (pFL h he)) (FL-inject refl) ))
    ... | ((suc zero) :: (zero :: (zero :: f0 ))) | (suc zero) :: (suc zero :: (zero :: f0 )) | record { eq = ge } |  record { eq = he } = 
             case2 (case2 (ptrans (comm-resp (pFL g ge) (pFL h he)) (FL-inject refl) ))
    ... | ((suc zero) :: (zero :: (zero :: f0 ))) | ((suc (suc zero)) :: (zero :: (zero :: f0 )))| record { eq = ge } |  record { eq = he } =  

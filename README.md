@@ -20,8 +20,14 @@ sym3.agda            Symmetric 3 is solvable
 sym4.agda            Symmetric 4 is solvable
 sym5.agda            Symmetric 5 is not solvable
 
+FLutil.agda          unique concrete representation of Permutation
+                     with Fresh List
+FLComm.agda          Solvable in FL / FList
+
+sym2n.agda           proved by Any
+sym3n.agda           
+sym4n.agda           
 
 ```
 
-Todo :  Use Data.List.Fresh to obtain all list of FL, and Commutator of FL.
-        It should make sym2, sym3 and sym4 simpler.
+Todo :  some proofs in FLutil / FLComm are not finished
