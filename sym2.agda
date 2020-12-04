@@ -13,6 +13,7 @@ open import Data.Product
 
 open import Gutil 
 open import Putil 
+open import FLutil 
 open import Solvable using (solvable)
 open import  Relation.Binary.PropositionalEquality hiding ( [_] )
 

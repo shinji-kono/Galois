@@ -678,6 +678,23 @@ FL-inject {n} {g} {h} g=h = record { peq = λ q → ( begin
 
 -- FLpid : (n : ℕ) → (x : Permutation n n) → perm→FL x ≡ FL0 → x =p= pid
 
+FLpid :  {n : ℕ} → (x : Permutation n n) → perm→FL x ≡ FL0 → FL→perm FL0 =p= pid   → x =p= pid
+FLpid x eq p0id = ptrans pf2 (ptrans pf0 p0id ) where
+   pf2 : x =p= FL→perm (perm→FL x)
+   pf2 = psym (FL←iso x)
+   pf0 : FL→perm (perm→FL x) =p= FL→perm FL0
+   pf0 = pcong-Fp eq
+
+pFL0 : {n : ℕ } → FL0 {n} ≡ perm→FL pid
+pFL0 {zero} = refl
+pFL0 {suc n} = sym ( begin
+        perm→FL pid
+     ≡⟨⟩
+        {!!}
+     ≡⟨ {!!} ⟩
+        FL0
+     ∎  )
+
 lem2 : {i n : ℕ } → i ≤ n → i ≤ suc n
 lem2 i≤n = ≤-trans i≤n ( a≤sa )
 

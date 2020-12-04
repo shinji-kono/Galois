@@ -156,18 +156,7 @@ solvable.end sym3solvable x d = solved1 x d where
           case2 (case1 (ptrans (comm-resp (pFL g ge) (pFL h he)) (FL-inject refl) ))
    
    stage12  :  (x : Permutation 3 3) → stage1 x →  ( x =p= pid ) ∨ ( x =p= p3 ) ∨ ( x =p= p4 )
-   stage12 x uni = case1 prefl
    stage12 x (comm {g} {h} x1 y1 ) = st02 g h
-   stage12 _ (gen {x} {y} sx sy) with stage12 x sx | stage12 y sy 
-   ... | case1 t | case1 s = case1 ( record { peq = λ q → peq (presp t s) q} )
-   ... | case1 t | case2 (case1 s) = case2 (case1 ( record { peq = λ q → peq (presp t s ) q } )) 
-   ... | case1 t | case2 (case2 s) = case2 (case2 ( record { peq = λ q → peq (presp t s ) q } )) 
-   ... | case2 (case1 t) | case1 s = case2 (case1 ( record { peq = λ q → peq (presp t s ) q } )) 
-   ... | case2 (case2 t) | case1 s = case2 (case2 ( record { peq = λ q → peq (presp t s ) q } )) 
-   ... | case2 (case1 s) | case2 (case1 t) = case2 (case2 record { peq = λ q → trans (peq ( presp s t ) q) ( peq  p33=4 q) } ) 
-   ... | case2 (case1 s) | case2 (case2 t) = case1 record { peq = λ q → trans (peq ( presp s t ) q) ( peq  p34=0 q) }  
-   ... | case2 (case2 s) | case2 (case1 t) = case1 record { peq = λ q → trans (peq ( presp s t ) q) ( peq  p43=0 q) } 
-   ... | case2 (case2 s) | case2 (case2 t) = case2 (case1 record { peq = λ q → trans (peq ( presp s t ) q) ( peq  p44=3 q) } ) 
    stage12 _ (ccong {y} x=y sx) with stage12 y sx
    ... | case1 id = case1 ( ptrans (psym x=y ) id )
    ... | case2 (case1 x₁) = case2 (case1 ( ptrans (psym x=y ) x₁ ))
@@ -175,17 +164,6 @@ solvable.end sym3solvable x d = solved1 x d where
 
 
    solved1 :  (x : Permutation 3 3) →  Commutator (λ x₁ → Commutator (λ x₂ → Lift (Level.suc Level.zero) ⊤) x₁) x → x =p= pid
-   solved1 _ uni = prefl
-   solved1 x (gen {f} {g} d d₁) with solved1 f d | solved1 g d₁
-   ... | record { peq = f=e } | record { peq = g=e } = record { peq = λ q → genlem q } where
-      genlem : ( q : Fin 3 ) → g ⟨$⟩ʳ ( f ⟨$⟩ʳ q ) ≡ q
-      genlem q = begin
-             g ⟨$⟩ʳ ( f ⟨$⟩ʳ q )
-          ≡⟨ g=e ( f ⟨$⟩ʳ q ) ⟩
-             f ⟨$⟩ʳ q 
-          ≡⟨ f=e q ⟩
-             q
-          ∎ 
    solved1 x (ccong {f} {g} (record {peq = f=g}) d) with solved1 f d
    ... | record { peq = f=e }  =  record  { peq = λ q → cc q } where
       cc : ( q : Fin 3 ) → x ⟨$⟩ʳ q ≡ q

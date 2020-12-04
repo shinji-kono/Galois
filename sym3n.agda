@@ -44,14 +44,7 @@ solvable.end sym3solvable x d = solved1 x d where
    stage3FList = refl
 
    solved1 :  (x : Permutation 3 3) → deriving 2 x → x =p= pid
-   solved1 x dr = CommSolved 3 x ( CommFListN 3 2 ) stage3FList pf solved2 where
-      --    p0id :  FL→perm ((# 0) :: ((# 0) :: ((# 0 ) :: f0))) =p= pid
-      pf : perm→FL x ≡ FL0 → x =p= pid
-      pf eq = ptrans pf2 (ptrans pf0 p0id ) where
-         pf2 : x =p= FL→perm (perm→FL x)
-         pf2 = psym (FL←iso x)
-         pf0 : FL→perm (perm→FL x) =p= FL→perm FL0
-         pf0 = pcong-Fp eq
+   solved1 x dr = CommSolved 3 x ( CommFListN 3 2 ) stage3FList p0id solved2 where
       solved2 : Any (perm→FL x ≡_) ( CommFListN 3 2 )
       solved2 = CommStage→ 3 2 x dr
 

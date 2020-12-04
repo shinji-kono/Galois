@@ -19,9 +19,7 @@ open import Gutil G
 [ g , h ] = g ⁻¹ ∙ h ⁻¹ ∙ g ∙ h 
 
 data Commutator (P : Carrier → Set (Level.suc n ⊔ m)) : (f : Carrier) → Set (Level.suc n ⊔ m) where
-  uni   : Commutator P ε
   comm  : {g h : Carrier} → P g → P h  → Commutator P [ g , h ] 
-  gen   : {f g : Carrier} → Commutator P f → Commutator P g → Commutator P ( f ∙  g  )
   ccong : {f g : Carrier} → f ≈ g → Commutator P f → Commutator P g
 
 deriving : ( i : ℕ ) → Carrier → Set (Level.suc n ⊔ m)
@@ -58,15 +56,9 @@ lemma4 g h = begin
        [ g , h ]  ⁻¹                  
      ∎ 
 
-deriving-mul : { i : ℕ } → { x y : Carrier } → deriving i x → deriving i y  → deriving i ( x ∙ y )
-deriving-mul {zero} {x} {y} _ _ = lift tt
-deriving-mul {suc i} {x} {y} ix iy = gen ix iy
-
 deriving-inv : { i : ℕ } → { x  : Carrier } → deriving i x → deriving i ( x ⁻¹ )
 deriving-inv {zero} {x} (lift tt) = lift tt
-deriving-inv {suc i} {ε} uni = ccong lemma3 uni
 deriving-inv {suc i} {_} (comm x x₁ )   = ccong (lemma4 _ _) (comm x₁ x) 
-deriving-inv {suc i} {_} (gen x x₁ )    = ccong (lemma5 _ _ ) ( gen (deriving-inv x₁) (deriving-inv x)) 
 deriving-inv {suc i} {x} (ccong eq ix ) = ccong (⁻¹-cong eq) ( deriving-inv ix )
 
 idcomtr : (g  : Carrier ) → [ g , ε  ] ≈ ε 
@@ -86,6 +78,10 @@ idcomtl g  = begin
        (g ⁻¹   ∙    g     )                ≈⟨  proj₁ inverse _ ⟩
        ε
      ∎ 
+
+deriving-ε : { i : ℕ } → deriving i ε
+deriving-ε {zero} = lift tt
+deriving-ε {suc i} = ccong (idcomtr ε) (comm deriving-ε deriving-ε) 
 
 comm-refl : {f g : Carrier } → f ≈ g  → [ f ,  g ] ≈ ε 
 comm-refl {f} {g} f=g = begin

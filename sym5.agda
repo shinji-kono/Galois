@@ -32,7 +32,6 @@ open _∧_
 
 ¬sym5solvable : ¬ ( solvable (Symmetric 5) )
 ¬sym5solvable sol = counter-example (end5 (abc 0<3 0<4 ) (dervie-any-3rot0 (dervied-length sol) 0<3 0<4 ) ) where
-
 --
 --    dba       1320      d → b → a → d
 --    (dba)⁻¹   3021      a → b → d → a
@@ -74,6 +73,10 @@ open _∧_
      abc i<3 j<4 = ins2 3rot i<3 j<4
      dba : {i j : ℕ }  → (i ≤ 3 ) → ( j ≤ 4 ) → Permutation  5 5
      dba i<3 j<4 = ins2 (3rot ∘ₚ 3rot) i<3 j<4
+
+     counter-example :  ¬ (abc 0<3 0<4  =p= pid )
+     counter-example eq with ←pleq _ _ eq
+     ...  | ()
 
      record Triple {i j : ℕ } (i<3 : i ≤ 3) (j<4 : j ≤ 4) (rot : Permutation 3 3) : Set where
        field 
@@ -196,11 +199,6 @@ open _∧_
         tc = triple i<3 j<4
         dba0 = dba (fin≤n {3} (dba0<3 tc)) (fin≤n {4} (dba1<4 tc))
         aec0 = dba (fin≤n {3} (aec0<3 tc)) (fin≤n {4} (aec1<4 tc))
-        --
-        -- abc= : ins2 rot i<3 j<4 =p= [ ins2 (rot ∘ₚ rot)  (fin≤n {3} dba0<3) (fin≤n {4} dba1<4)  , ins2 (rot ∘ₚ rot) (fin≤n {3} aec0<3) (fin≤n {4} aec1<4) ]
-        --
-        ceq'  : ins2 3rot i<3 j<4 =p= [ ins2 (3rot ∘ₚ 3rot)  (fin≤n {3} (dba0<3 tc)) (fin≤n {4} (dba1<4 tc))  , ins2 (3rot ∘ₚ 3rot) (fin≤n {3} (aec0<3 tc )) (fin≤n {4} (aec1<4 tc)) ]
-        ceq'  = abc= tc
         ceq : abc i<3 j<4  =p=  [ dba0 , aec0 ]  
         ceq = record { peq = peq (abc= tc) }
         df =  dervie-any-3rot1 i  (fin≤n {3} (dba0<3 tc)) (fin≤n {4} (dba1<4 tc))
@@ -219,10 +217,4 @@ open _∧_
         dg : deriving n (ins2 ((3rot ∘ₚ 3rot) ∘ₚ (3rot ∘ₚ 3rot )) (fin≤n {3} (aec0<3 tdba)) (fin≤n {4} (aec1<4 tdba)))
         dg = deriving-subst (psym (ins2cong {toℕ (aec0<3 (dba-triple i<3 j<4))} {toℕ (aec1<4 (dba-triple i<3 j<4))} 4=1 )) 
              (dervie-any-3rot0 n  (fin≤n {3} (aec0<3 tdba)) (fin≤n {4} (aec1<4 tdba)))
-
-     open _=p=_
-     counter-example :  ¬ (abc 0<3 0<4  =p= pid )
-     counter-example eq with ←pleq _ _ eq
-     ...  | ()
-
 
