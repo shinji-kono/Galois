@@ -53,6 +53,15 @@ a≤sa {suc x} = s≤s (a≤sa {x})
 <-∨ {suc x} {suc y} (s≤s lt) | case1 eq = case1 (cong (λ k → suc k ) eq)
 <-∨ {suc x} {suc y} (s≤s lt) | case2 lt1 = case2 (s≤s lt1)
 
+n≤n : (n : ℕ) →  n Data.Nat.≤ n
+n≤n zero = z≤n
+n≤n (suc n) = s≤s (n≤n n)
+
+<→m≤n : {m n : ℕ} → m  < n →  m Data.Nat.≤ n
+<→m≤n {zero} lt = z≤n
+<→m≤n {suc m} {zero} ()
+<→m≤n {suc m} {suc n} (s≤s lt) = s≤s (<→m≤n lt)
+
 max : (x y : ℕ) → ℕ
 max zero zero = zero
 max zero (suc x) = (suc x)

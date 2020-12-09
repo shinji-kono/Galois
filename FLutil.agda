@@ -30,6 +30,9 @@ data _f<_  : {n : ℕ } (x : FL n ) (y : FL n)  → Set  where
 FLeq : {n : ℕ } {xn yn : Fin (suc n)} {x : FL n } {y : FL n}  → xn :: x ≡ yn :: y → ( xn ≡ yn )  × (x ≡ y )
 FLeq refl = refl , refl 
 
+FLpos : {n : ℕ} → FL (suc n) → Fin (suc n)
+FLpos (x :: _) = x
+
 f-<> :  {n : ℕ } {x : FL n } {y : FL n}  → x f< y → y f< x → ⊥
 f-<> (f<n x) (f<n x₁) = nat-<> x x₁
 f-<> (f<n x) (f<t lt2) = nat-≡< refl x
@@ -90,14 +93,11 @@ fmax¬ {suc n} {x} ne with FLcmp x fmax
 ... | tri≈ ¬a b ¬c = ⊥-elim ( ne b)
 ... | tri> ¬a ¬b c = ⊥-elim (fmax< c)
 
-FL0≤ : {n : ℕ } → FL0 {n} f≤ fmax
-FL0≤ {zero} = case1 refl
-FL0≤ {suc zero} = case1 refl
-FL0≤ {suc n} with <-fcmp zero (fromℕ< {n} a<sa)
-... | tri< a ¬b ¬c = case2 (f<n a)
-... | tri≈ ¬a b ¬c with FL0≤ {n}
-... | case1 x = case1 (subst₂ (λ j k → (zero :: FL0) ≡ (j :: k ) ) b x refl )
-... | case2 x = case2 (subst (λ k →  (zero :: FL0) f< (k :: fmax)) b (f<t x)  )
+x≤fmax : {n : ℕ } → {x : FL n} → x f≤ fmax
+x≤fmax {n} {x} with FLcmp x fmax
+... | tri< a ¬b ¬c = case2 a
+... | tri≈ ¬a b ¬c = case1 b
+... | tri> ¬a ¬b c = ⊥-elim ( fmax< c )
 
 open import Data.Nat.Properties using ( ≤-trans ; <-trans )
 fsuc : { n : ℕ } → (x : FL n ) → x f< fmax → FL n 
@@ -265,32 +265,13 @@ FLfresh a x (cons b (cons a₁ y x₁) br) a<x (Level.lift a<b , a<y) | tri> ¬a
 
 fr6 = FLinsert ((# 1) :: ((# 1) :: ((# 0 ) :: f0))) fr1 
 
--- open import Data.List.Fresh.Relation.Unary.All
--- fr7 = append ( ((# 1) :: ((# 1) :: ((# 0 ) :: f0))) ∷# [] ) fr1 ( ({!!} , {!!} ) ∷ [] )
-
-Flist :  {n : ℕ } (i : ℕ) → i < suc n → FList n → FList n → FList (suc n)
-Flist zero i<n [] _ = []
-Flist zero i<n (a ∷# x ) z  = FLinsert ( zero :: a ) (Flist zero i<n x z )
-Flist (suc i) (s≤s i<n) [] z  = Flist i (<-trans i<n a<sa) z z 
-Flist (suc i) i<n (a ∷# x ) z  = FLinsert ((fromℕ< i<n ) :: a ) (Flist (suc i) i<n x z )
-
-∀Flist : {n : ℕ } → FL n → FList n
-∀Flist {zero} f0 = f0 ∷# [] 
-∀Flist {suc n} (x :: y)  = Flist n a<sa (∀Flist y) (∀Flist y)   
-
 ¬x<FL0 : {n : ℕ} {x : FL n} → ¬ ( x f< FL0 )
 ¬x<FL0 {suc n} {zero :: y} (f<t not) = ¬x<FL0 {n} {y} not
-
-fr8 : FList 4
-fr8 = ∀Flist fmax 
-
-fr9 : FList 3
-fr9 = ∀Flist fmax 
 
 open import Data.List.Fresh.Relation.Unary.Any 
 open import Data.List.Fresh.Relation.Unary.All 
 
-x∈FLins : {n : ℕ} → (x : FL n ) → (xs : FList n)  → Any (x ≡_ ) (FLinsert x xs)
+x∈FLins : {n : ℕ} → (x : FL n ) → (xs : FList n)  → Any (x ≡_) (FLinsert x xs)
 x∈FLins {zero} f0 [] = here refl
 x∈FLins {zero} f0 (cons f0 xs x) = here refl
 x∈FLins {suc n} x [] = here refl
@@ -300,11 +281,11 @@ x∈FLins {suc n} x (cons a xs x₁) with FLcmp x a
 x∈FLins {suc n} x (cons a [] x₁)              | tri> ¬a ¬b a<x = there ( here refl )
 x∈FLins {suc n} x (cons a (cons a₁ xs x₂) x₁) | tri> ¬a ¬b a<x = there ( x∈FLins x (cons a₁ xs x₂) )
 
-nextAny : {n : ℕ} → {x h : FL n } → {L : FList n}  → {hr : fresh (FL n) ⌊ _f<?_ ⌋ h L } → Any (x ≡_ ) L → Any (x ≡_ ) (cons h L hr )
+nextAny : {n : ℕ} → {x h : FL n } → {L : FList n}  → {hr : fresh (FL n) ⌊ _f<?_ ⌋ h L } → Any (x ≡_) L → Any (x ≡_) (cons h L hr )
 nextAny (here x₁) = there (here x₁)
 nextAny (there any) = there (there any)
 
-insAny : {n : ℕ} → {x h : FL n } → (xs : FList n)  → Any (x ≡_ ) xs → Any (x ≡_ ) (FLinsert h xs)
+insAny : {n : ℕ} → {x h : FL n } → (xs : FList n)  → Any (x ≡_) xs → Any (x ≡_) (FLinsert h xs)
 insAny {zero} {f0} {f0} (cons a L xr) (here refl) = here refl
 insAny {zero} {f0} {f0} (cons a L xr) (there any) = insAny {zero} {f0} {f0} L any 
 insAny {suc n} {x} {h} (cons a L xr) any with FLcmp h a 
@@ -313,30 +294,6 @@ insAny {suc n} {x} {h} (cons a L xr) any with FLcmp h a
 insAny {suc n} {a} {h} (cons a [] (Level.lift tt)) (here refl) | tri> ¬a ¬b c = here refl
 insAny {suc n} {x} {h} (cons a (cons a₁ L x₁) xr) (here refl) | tri> ¬a ¬b c = here refl
 insAny {suc n} {x} {h} (cons a (cons a₁ L x₁) xr) (there any) | tri> ¬a ¬b c = there (insAny (cons a₁ L x₁) any)
-
-{-# TERMINATING #-}
-AnyFList : {n : ℕ }  → (x : FL n ) →  Any (x ≡_ ) (∀Flist fmax)
-AnyFList {zero} f0 = here refl
-AnyFList {suc zero} (zero :: f0) = here refl
-AnyFList {suc (suc n)} (x :: y) = subst (λ k → Any (_≡_ (k :: y)) (Flist (suc n) a<sa (∀Flist fmax) (∀Flist fmax) ))
-         (fromℕ<-toℕ _ _) ( AnyFList1 (suc n) (toℕ x) a<sa (∀Flist fmax) (∀Flist fmax) fin<n fin<n (AnyFList y) (AnyFList y)) where
-   AnyFList1 :  (i x : ℕ) → (i<n : i < suc (suc n) ) → (L L1 : FList (suc n) ) → (x<n : x < suc (suc n) ) → x < suc i
-        → Any (y ≡_ ) L → Any (y ≡_ ) L1
-        → Any (((fromℕ< x<n) :: y) ≡_ ) (Flist i i<n L L1)
-   AnyFList1 zero x i<n [] L1 (s≤s x<i) _ () _
-   AnyFList1 zero zero i<n (cons y L xr) L1 x<n (s≤s z≤n) (here refl) any = x∈FLins (zero :: y) (Flist 0 i<n L L1)
-   AnyFList1 zero zero i<n (cons a L xr) L1 x<n (s≤s z≤n) (there wh) any = insAny _ (AnyFList1 zero zero i<n L L1 x<n (s≤s z≤n) wh any)
-   AnyFList1 (suc i) x (s≤s i<n) (cons y L x₁) L1 x<n (s≤s x<i) (here refl) any with <-fcmp (fromℕ< x<n) (fromℕ< (s≤s i<n))
-   ... | tri< a ¬b ¬c = insAny  (Flist (suc i) (s≤s i<n) L L1) (af1 L ) where
-        af1 : (L : FList (suc n)) → Any (_≡_ (fromℕ< x<n :: y)) (Flist (suc i) (s≤s i<n) L L1)
-        af1 [] = AnyFList1 i x (<-trans i<n a<sa) L1 L1 x<n (subst₂ (λ j k → j < k )  (toℕ-fromℕ< _) (cong suc  (toℕ-fromℕ< _)) a )  any any
-        af1 (cons a L x) = insAny (Flist (suc i) (s≤s i<n) L L1) (af1 L )
-   ... | tri≈ ¬a b ¬c = subst (λ k → Any (_≡_ (fromℕ< x<n :: y)) (FLinsert k  (Flist (suc i) (s≤s i<n) L L1) )) (cong (λ k → k :: y) b)
-        (x∈FLins (fromℕ< x<n :: y) (Flist (suc i) (s≤s i<n) L L1))
-   ... | tri> ¬a ¬b c = ⊥-elim ( nat-≤> x<i (subst₂ (λ j k → suc (suc k) ≤ j ) (toℕ-fromℕ< _) (toℕ-fromℕ< _) c) )
-   AnyFList1 (suc i) x (s≤s i<n) (cons a (cons a₁ L x₂) x₁) L1 x<n (s≤s x<i) (there wh) any with FLcmp a a₁
-   ... | tri< a₂ ¬b ¬c = insAny _ (AnyFList1 (suc i) x (s≤s i<n) (cons a₁ L x₂) L1 x<n (s≤s x<i) wh any )
-   AnyFList1 (suc i) x (s≤s i<n) (cons a (cons .a L x₂) (Level.lift () , snd)) L1 x<n (s≤s x<i) (there wh) any | tri≈ ¬a refl ¬c
 
 -- FLinsert membership
 

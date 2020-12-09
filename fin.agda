@@ -10,15 +10,6 @@ open import nat
 open import Relation.Binary.PropositionalEquality
 
 
-n≤n : (n : ℕ) →  n Data.Nat.≤ n
-n≤n zero = z≤n
-n≤n (suc n) = s≤s (n≤n n)
-
-<→m≤n : {m n : ℕ} → m  < n →  m Data.Nat.≤ n
-<→m≤n {zero} lt = z≤n
-<→m≤n {suc m} {zero} ()
-<→m≤n {suc m} {suc n} (s≤s lt) = s≤s (<→m≤n lt)
-
 -- toℕ<n
 fin<n : {n : ℕ} {f : Fin n} → toℕ f < n
 fin<n {_} {zero} = s≤s z≤n
@@ -40,6 +31,12 @@ fin<asa = toℕ-fromℕ< nat.a<sa
 toℕ→from : {n : ℕ} {x : Fin (suc n)} → toℕ x ≡ n → fromℕ n ≡ x
 toℕ→from {0} {zero} refl = refl
 toℕ→from {suc n} {suc x} eq = cong (λ k → suc k ) ( toℕ→from {n} {x} (cong (λ k → Data.Nat.pred k ) eq ))
+
+0≤fmax : {n : ℕ } → (# 0) Data.Fin.≤ fromℕ< {n} a<sa
+0≤fmax  = subst (λ k → 0 ≤ k ) (sym (toℕ-fromℕ< a<sa)) z≤n
+
+0<fmax : {n : ℕ } → (# 0) Data.Fin.< fromℕ< {suc n} a<sa
+0<fmax = subst (λ k → 0 < k ) (sym (toℕ-fromℕ< a<sa)) (s≤s z≤n)
 
 -- toℕ-injective
 i=j : {n : ℕ} (i j : Fin n) → toℕ i ≡ toℕ j → i ≡ j
