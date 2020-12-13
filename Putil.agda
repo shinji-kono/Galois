@@ -197,7 +197,7 @@ pins {suc n} {suc m} (s≤s  m≤n) = permutation p← p→  record { left-inver
             p11 : fromℕ< (≤-trans (fin<n {_} {y}) a≤sa ) ≡ suc x
             p11 = begin
                fromℕ< (≤-trans (fin<n {_} {y}) a≤sa )
-              ≡⟨ lemma10  p12  ⟩
+              ≡⟨ lemma10 {suc (suc n)} {_} {_} p12 {≤-trans (fin<n {_} {y}) a≤sa} {s≤s (fin<n {suc n} {x} )}  ⟩
                suc (fromℕ< (fin<n {suc n} {x} )) 
               ≡⟨ cong suc (fromℕ<-toℕ x _ ) ⟩
                suc x
@@ -232,7 +232,7 @@ pins {suc n} {suc m} (s≤s  m≤n) = permutation p← p→  record { left-inver
              fromℕ< (≤-trans (s≤s  a₁) (s≤s (s≤s  m≤n) ))
           ≡⟨⟩
              fromℕ< (s≤s (≤-trans a₁ (s≤s m≤n))) 
-          ≡⟨ lemma10 (p3 x) {p6} {p2} ⟩
+          ≡⟨ lemma10 {suc (suc n)} (p3 x) {p6} {p2} ⟩
              fromℕ< ( s≤s (fin<n {suc n} {x}) )
           ≡⟨⟩
              suc (fromℕ< (fin<n {suc n} {x} )) 
@@ -278,7 +278,7 @@ p=0 {suc n} perm with perm ⟨$⟩ʳ (# 0) | inspect (_⟨$⟩ʳ_ perm ) (# 0)| 
           p004 = p003  (fromℕ< (s≤s (s≤s m≤n))) (
              begin
                 fromℕ< (s≤s (s≤s m≤n))
-             ≡⟨  lemma10  (cong suc meq) {s≤s (s≤s m≤n)} {subst (λ k →  suc k < suc (suc n)) meq (s≤s (s≤s m≤n)) } ⟩
+             ≡⟨  lemma10 {suc (suc n)}  (cong suc meq) {s≤s (s≤s m≤n)} {subst (λ k →  suc k < suc (suc n)) meq (s≤s (s≤s m≤n)) } ⟩
                 fromℕ< (subst (λ k →  suc k < suc (suc n)) meq (s≤s (s≤s m≤n)) )
              ≡⟨ fromℕ<-toℕ {suc (suc n)} (suc t) (subst (λ k →  suc k < suc (suc n)) meq (s≤s (s≤s m≤n)) ) ⟩
                 suc t
@@ -578,10 +578,25 @@ t3 = plist (FL→perm t40) -- ∷ plist (pprep (FL→perm t40))
     ∷ []
 
 
+-- FL→plist-iso : {n : ℕ} → (f : FL n ) → plist→FL (FL→plist f ) ≡ f
+-- FL→plist-inject : {n : ℕ} → (f g : FL n ) → FL→plist f ≡ FL→plist g → f ≡ g
+
 perm→FL   : {n : ℕ }  → Permutation n n → FL n
 perm→FL {zero} perm = f0
 perm→FL {suc n} perm = (perm ⟨$⟩ʳ (# 0)) :: perm→FL (shrink (perm ∘ₚ flip (pins (toℕ≤pred[n] (perm ⟨$⟩ʳ (# 0))))) (p=0 perm) ) 
--- perm→FL {suc n} perm = (perm ⟨$⟩ʳ (# 0)) :: perm→FL (remove (# 0) perm)  
+
+---FL→perm   : {n : ℕ }  → FL n → Permutation n n 
+---FL→perm   x = plist→perm ( FL→plis x)
+-- perm→FL   : {n : ℕ }  → Permutation n n → FL n
+-- perm→FL p  = plist→FL (plist p)
+
+-- pcong-pF : {n : ℕ }  → {x y : Permutation n n}  → x =p= y → perm→FL x ≡ perm→FL y
+-- pcong-pF {n} {x} {y} x=y = FL→plist-inject (subst ... (pleq← eq)) (perm→FL x) (perm→FL y)
+
+-- FL→iso : {n : ℕ }  → (fl : FL n )  → perm→FL ( FL→perm fl ) ≡ fl
+-- FL→iso = 
+-- pcong-Fp : {n : ℕ }  → {x y : FL n}  → x ≡ y → FL→perm x =p= FL→perm y
+-- FL←iso : {n : ℕ }  → (perm : Permutation n n )  → FL→perm ( perm→FL perm  ) =p= perm
 
 _p<_ : {n : ℕ } ( x y : Permutation n n ) → Set
 x p< y = perm→FL x f<  perm→FL y
@@ -676,8 +691,6 @@ FL-inject {n} {g} {h} g=h = record { peq = λ q → ( begin
         h ⟨$⟩ʳ q
      ∎  ) }
 
--- FLpid : (n : ℕ) → (x : Permutation n n) → perm→FL x ≡ FL0 → x =p= pid
-
 FLpid :  {n : ℕ} → (x : Permutation n n) → perm→FL x ≡ FL0 → FL→perm FL0 =p= pid   → x =p= pid
 FLpid x eq p0id = ptrans pf2 (ptrans pf0 p0id ) where
    pf2 : x =p= FL→perm (perm→FL x)
@@ -687,46 +700,4 @@ FLpid x eq p0id = ptrans pf2 (ptrans pf0 p0id ) where
 
 pFL0 : {n : ℕ } → FL0 {n} ≡ perm→FL pid
 pFL0 {zero} = refl
-pFL0 {suc n} = sym ( begin
-        perm→FL pid
-     ≡⟨⟩
-        {!!}
-     ≡⟨ {!!} ⟩
-        FL0
-     ∎  )
-
-lem2 : {i n : ℕ } → i ≤ n → i ≤ suc n
-lem2 i≤n = ≤-trans i≤n ( a≤sa )
-
-∀-FL : (n : ℕ ) → List (FL (suc n))
-∀-FL  x  = fls6 x  where
-   fls4 :  ( i n : ℕ ) → (i<n : i ≤ n ) → FL  n → List (FL  (suc n))  → List (FL  (suc n)) 
-   fls4 zero n i≤n perm x = (zero :: perm ) ∷ x
-   fls4 (suc i) n i≤n  perm x = fls4 i n (≤-trans a≤sa i≤n ) perm ((fromℕ< (s≤s i≤n) :: perm ) ∷ x)
-   fls5 :  ( n : ℕ ) → List (FL n) → List (FL  (suc n))  → List (FL (suc n)) 
-   fls5 n [] x = x
-   fls5 n (h ∷ x) y = fls5  n x (fls4 n n lem0 h y)
-   fls6 :  ( n : ℕ ) → List (FL  (suc n)) 
-   fls6 zero = (zero :: f0) ∷ []
-   fls6 (suc n) =  fls5 (suc n) (fls6 n) []   
-
-tf1 = ∀-FL 4
-tf2 = Data.List.map (λ k → ⟪ plist (FL→perm k ) , k ⟫ ) tf1
-
-all-perm : (n : ℕ ) → List (Permutation (suc n) (suc n) )
-all-perm n = pls6 n where
-   lem1 : {i n : ℕ } → i ≤ n → i < suc n
-   lem1 z≤n = s≤s z≤n
-   lem1 (s≤s lt) = s≤s (lem1 lt)
-   pls4 :  ( i n : ℕ ) → (i<n : i ≤ n ) → Permutation n n → List (Permutation (suc n) (suc n))  → List (Permutation (suc n) (suc n)) 
-   pls4 zero n i≤n perm x = (pprep perm ∘ₚ pins i≤n ) ∷ x
-   pls4 (suc i) n i≤n  perm x = pls4 i n (≤-trans a≤sa i≤n ) perm (pprep perm ∘ₚ pins {n} {suc i} i≤n  ∷ x)
-   pls5 :  ( n : ℕ ) → List (Permutation n n) → List (Permutation (suc n) (suc n))  → List (Permutation (suc n) (suc n)) 
-   pls5 n [] x = x
-   pls5 n (h ∷ x) y = pls5  n x (pls4 n n lem0 h y)
-   pls6 :  ( n : ℕ ) → List (Permutation (suc n) (suc n)) 
-   pls6 zero = pid ∷ []
-   pls6 (suc n) =  pls5 (suc n) (rev (pls6 n) ) []   -- rev to put id first
-
-pls : (n : ℕ ) → List (List ℕ )
-pls n = Data.List.map plist (all-perm n) 
+pFL0 {suc n} = cong (λ k → zero :: k ) pFL0

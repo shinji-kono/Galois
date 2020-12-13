@@ -106,41 +106,7 @@ fsuc {n} (x :: y) (f<n lt) = fromℕ< fsuc1 :: y where
     fsuc1 =  Data.Nat.Properties.≤-trans (s≤s lt) ( s≤s ( toℕ≤pred[n] (fromℕ< a<sa)) )
 fsuc (x :: y) (f<t lt) = x :: fsuc y lt
 
--- fsuc0 : { n : ℕ } → (x : FL n ) → FL n 
--- fsuc0 {n} (x :: y) (f<n lt) = fromℕ< fsuc2 :: y where
---     fsuc2 : suc (toℕ x) < n
---     fsuc2 =  Data.Nat.Properties.≤-trans (s≤s lt) ( s≤s ( toℕ≤pred[n] (fromℕ< a<sa)) )
--- fsuc0 (x :: y) (f<t lt) = x :: fsuc y lt
-
-open import Data.Maybe
 open import fin
-
-fpredm : { n : ℕ } → (x : FL n ) → Maybe (FL n)
-fpredm f0 = nothing
-fpredm (x :: y) with fpredm y
-... | just y1 = just (x :: y1)
-fpredm (zero :: y) | nothing = nothing
-fpredm (suc x :: y) | nothing = just (fin+1 x :: fmax)
-
-¬<FL0 : {n : ℕ} {y : FL n} → ¬ y f< FL0
-¬<FL0 {suc n} {zero :: y} (f<t lt) = ¬<FL0 {n} {y} lt 
-
-fpred : { n : ℕ } → (x : FL n ) → FL0 f< x  → FL n
-fpred (zero :: y) (f<t lt) = zero :: fpred y lt
-fpred (x :: y) (f<n lt) with FLcmp FL0 y
-... | tri< a ¬b ¬c = x :: fpred y a
-... | tri> ¬a ¬b c = ⊥-elim (¬<FL0 c)
-fpred {suc _} (suc x :: y) (f<n lt) | tri≈ ¬a b ¬c = fin+1 x :: fmax
-
-fpred< : { n : ℕ } → (x : FL n ) → (lt : FL0 f< x ) → fpred x lt f< x
-fpred< (zero :: y) (f<t lt) = f<t (fpred< y lt)
-fpred< (suc x :: y) (f<n lt) with FLcmp FL0 y
-... | tri< a ¬b ¬c = f<t ( fpred< y a)
-... | tri> ¬a ¬b c = ⊥-elim (¬<FL0 c)
-... | tri≈ ¬a refl ¬c = f<n fpr1 where
-   fpr1 : {n : ℕ } {x : Fin n} → fin+1 x Data.Fin.< suc x
-   fpr1 {suc _} {zero} = s≤s z≤n
-   fpr1 {suc _} {suc x} = s≤s fpr1
 
 flist1 :  {n : ℕ } (i : ℕ) → i < suc n → List (FL n) → List (FL n) → List (FL (suc n)) 
 flist1 zero i<n [] _ = []
@@ -151,14 +117,6 @@ flist1 (suc i) i<n (a ∷ x ) z  = ((fromℕ< i<n ) :: a ) ∷ flist1 (suc i) i<
 flist : {n : ℕ } → FL n → List (FL n) 
 flist {zero} f0 = f0 ∷ [] 
 flist {suc n} (x :: y)  = flist1 n a<sa (flist y) (flist y)   
-
-fr22 : fsuc (zero :: zero :: f0) (fmax¬ (λ ())) ≡ (suc zero :: zero :: f0)
-fr22 = refl
-
-fr4 : List (FL 4)
-fr4 = Data.List.reverse (flist (fmax {4}) ) 
--- fr5 : List (List ℕ)
--- fr5 = map plist (map FL→perm  (Data.List.reverse (flist (fmax {4}) )))
 
 FL1 : List ℕ → List ℕ
 FL1 [] = []
@@ -177,7 +135,6 @@ FL→plist {suc n} (suc x :: y) with FL→plist y
 
 tt0 = (# 2) :: (# 1) :: (# 0) :: zero :: f0
 tt1 = FL→plist tt0
--- tt2 = plist ( FL→perm tt0 )
 
 open _∧_
 
@@ -188,7 +145,7 @@ find-zero (zero ∷ y) (s≤s (s≤s i<n)) = record { proj1 = fromℕ< (s≤s (s
 find-zero (suc x ∷ y) (s≤s (s≤s i<n)) with find-zero y (s≤s i<n) 
 ... | record { proj1 = i ; proj2 = y1 } = record { proj1 = suc i ; proj2 = suc x ∷ y1 }
 
-plist→FL : {n : ℕ} → List ℕ → FL n
+plist→FL : {n : ℕ} → List ℕ → FL n -- wrong implementation
 plist→FL {zero} [] = f0
 plist→FL {suc n} [] = zero :: plist→FL {n} []
 plist→FL {zero} x = f0
@@ -198,7 +155,14 @@ plist→FL {suc n} x with find-zero x a<sa
 tt2 = 2 ∷ 1 ∷ 0 ∷ 3 ∷ []
 tt3 : FL 4
 tt3 = plist→FL tt2
--- tt4 = proj1 (find-zero {5} {4} tt2 a<sa) , proj2 (find-zero {5} {4} tt2 a<sa)
+tt4 = FL→plist tt3
+tt5 = plist→FL {4} (FL→plist tt0)
+
+-- maybe FL→iso can be easier using this ...
+-- FL→plist-iso : {n : ℕ} → (f : FL n ) → plist→FL (FL→plist f ) ≡ f
+-- FL→plist-iso = {!!}
+-- FL→plist-inject : {n : ℕ} → (f g : FL n ) → FL→plist f ≡ FL→plist g → f ≡ g
+-- FL→plist-inject = {!!}
 
 open import Relation.Binary as B hiding (Decidable; _⇔_)
 open import Data.Sum.Base as Sum --  inj₁
@@ -264,9 +228,6 @@ FLfresh a x (cons b (cons a₁ y x₁) br) a<x (Level.lift a<b , a<y) | tri> ¬a
     Level.lift a<b , FLfresh a x (cons a₁ y x₁) a<x a<y
 
 fr6 = FLinsert ((# 1) :: ((# 1) :: ((# 0 ) :: f0))) fr1 
-
-¬x<FL0 : {n : ℕ} {x : FL n} → ¬ ( x f< FL0 )
-¬x<FL0 {suc n} {zero :: y} (f<t not) = ¬x<FL0 {n} {y} not
 
 open import Data.List.Fresh.Relation.Unary.Any 
 open import Data.List.Fresh.Relation.Unary.All 

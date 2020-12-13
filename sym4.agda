@@ -54,6 +54,9 @@ solvable.end sym4solvable x d = solved1 x d where
 
    stage3FList : CommFListN 4 3 ≡ cons (zero :: zero :: zero :: zero :: f0) [] (Level.lift tt)
    stage3FList = refl
+
+   st3 = proj₁ (toList ( CommFListN 4 2 ))
+   -- st4 = {!!}
  
    solved1 :  (x : Permutation 4 4) → deriving 3 x → x =p= pid 
    solved1 x dr = CommSolved 4 x ( CommFListN 4 3 ) stage3FList p0id solved2 where

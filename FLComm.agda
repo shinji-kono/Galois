@@ -37,7 +37,6 @@ open _∧_
 open import Relation.Nullary.Decidable hiding (⌊_⌋)
 
 open import fin
-open AnyFL
 
 -- all cobmbination in P and Q (could be more general)
 record AnyComm {n m l : ℕ}  (P : FList n) (Q : FList m) (fpq : (p : FL n) (q : FL m) → FL l) : Set where
@@ -103,6 +102,8 @@ record AnyFL (n : ℕ) : Set where
      allFL : FList n
      anyP : (x : FL n) → Any (x ≡_ ) allFL 
 
+open AnyFL
+
 --   all FL as all combination  
 --      anyComm ( #0 :: FL0 ... # n :: FL0 ) (all n) (λ p q → FLpos p :: q ) = all (suc n)
 
@@ -144,11 +145,6 @@ at1 = proj₁ (toList (allFL (anyFL 1)))
 at2 = proj₁ (toList (allFL (anyFL 2)))
 at3 = proj₁ (toList (allFL (anyFL 3)))
 at4 = proj₁ (toList (allFL (anyFL 4)))
-
--- open import Data.List.Fresh.Relation.Unary.All
--- at6 : All (_# allFL (anyFL 2)) (allFL (anyFL 2))
--- at6 = {!!}
--- at5 = append (allFL (anyFL 2)) (allFL (anyFL 2)) at6
 
 CommFListN  : ℕ →  FList n
 CommFListN  zero = allFL (anyFL n)
