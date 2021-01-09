@@ -1,0 +1,12 @@
+name:              Galois
+version:           v0.0.1
+
+
+homepage:          https://ie.u-ryukyu.ac.jp/~kono
+license:           MIT
+license-file:      LICENSE.md
+source-repository: https://github.com/shinji-kono/Galois
+tested-with:       2.6.2-102d9c8
+description:       Solvability on Symmetry
+
+# End 

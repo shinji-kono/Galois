@@ -97,18 +97,7 @@ solvable.end sym2solvable x d = solved x d where
               g=h :  g =p= h
               g=h =  FL-inject (trans g=00 (sym h=00))
    solved :  (x : Permutation 2 2) → Commutator  (λ x₁ → Lift (Level.suc Level.zero) ⊤) x → x =p= pid
-   solved x uni = prefl
    solved x (comm {g} {h} _ _) = record { peq = sym2lem0 g h  } 
-   solved x (gen {f} {g} d d₁) with solved f d | solved g d₁
-   ... | record { peq = f=e } | record { peq = g=e } = record { peq = λ q → genlem q } where
-      genlem : ( q : Fin 2 ) → g ⟨$⟩ʳ ( f ⟨$⟩ʳ q ) ≡ q
-      genlem q = begin
-             g ⟨$⟩ʳ ( f ⟨$⟩ʳ q )
-          ≡⟨ g=e ( f ⟨$⟩ʳ q ) ⟩
-             f ⟨$⟩ʳ q 
-          ≡⟨ f=e q ⟩
-             q
-          ∎ where open ≡-Reasoning
    solved x (ccong {f} {g} (record {peq = f=g}) d) with solved f d
    ... | record { peq = f=e }  =  record  { peq = λ q → cc q } where
       cc : ( q : Fin 2 ) → x ⟨$⟩ʳ q ≡ q
