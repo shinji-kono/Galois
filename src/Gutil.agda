@@ -20,15 +20,15 @@ gsym = Algebra.Group.sym G
 grefl = Algebra.Group.refl G
 gtrans = Algebra.Group.trans G
 
-lemma3 : ε ≈ ε ⁻¹
-lemma3 = begin
+ε≈ε⁻¹ : ε ≈ ε ⁻¹
+ε≈ε⁻¹ = begin
      ε          ≈⟨ gsym (proj₁ inverse _) ⟩
      ε ⁻¹ ∙ ε   ≈⟨ proj₂ identity _ ⟩
      ε ⁻¹
    ∎ where open EqReasoning (Algebra.Group.setoid G)
 
-lemma6 : {f : Carrier } →  ( f ⁻¹ ) ⁻¹  ≈ f
-lemma6 {f} = begin
+f⁻¹⁻¹≈f : {f : Carrier } →  ( f ⁻¹ ) ⁻¹  ≈ f
+f⁻¹⁻¹≈f {f} = begin
      ( f ⁻¹ ) ⁻¹   ≈⟨ gsym ( proj₁ identity _) ⟩
       ε  ∙ ( f ⁻¹ ) ⁻¹   ≈⟨ ∙-cong (gsym ( proj₂ inverse _ )) grefl ⟩
      (f ∙ f ⁻¹ ) ∙ ( f ⁻¹ ) ⁻¹   ≈⟨ assoc _ _ _ ⟩
@@ -40,91 +40,29 @@ lemma6 {f} = begin
 ≡→≈ : {f g : Carrier } → f ≡ g → f ≈ g
 ≡→≈ refl = grefl
 
----
--- to avoid assoc storm, flatten multiplication according to the template
---
+car : {f g h : Carrier } → f ≈ g → f ∙ h ≈ g ∙ h
+car f=g = ∙-cong f=g grefl 
 
-data MP  : Carrier → Set (Level.suc n) where
-    am  : (x : Carrier )   →  MP  x
-    _o_ : {x y : Carrier } →  MP  x →  MP  y → MP  ( x ∙ y )
+cdr : {f g h : Carrier } → f ≈ g → h ∙ f  ≈ h ∙ g 
+cdr f=g = ∙-cong grefl f=g 
 
-mpf : {x : Carrier } → (m : MP x ) → Carrier → Carrier
-mpf (am x) y = x ∙ y
-mpf (m o m₁) y = mpf m ( mpf m₁ y )
+-- module _ where
+--     open EqReasoning (Algebra.Group.setoid G)
+--     _≈⟨⟩_ : (a : Carrier ) → {b : Carrier} → a IsRelatedTo b → a IsRelatedTo b
+--     _ ≈⟨⟩ a  = a
 
-mp-flatten : {x : Carrier } → (m : MP x ) → Carrier 
-mp-flatten  m = mpf m ε 
-
-mpl1 : Carrier → {x : Carrier } → MP x → Carrier
-mpl1 x (am y) = x ∙ y
-mpl1 x (y o y1) = mpl1 ( mpl1 x y ) y1
-
-mpl : {x z : Carrier } → MP x → MP z  → Carrier
-mpl (am x)  m = mpl1 x m 
-mpl (m o m1) m2 = mpl m (m1 o m2)
-
-mp-flattenl : {x : Carrier } → (m : MP x ) → Carrier
-mp-flattenl m = mpl m (am ε)
-
-test1 : ( f g : Carrier ) → Carrier
-test1 f g = mp-flattenl ((am (g ⁻¹) o am (f ⁻¹) ) o ( (am f o am g) o am ((f ∙ g) ⁻¹ ))) 
-
-test2 : ( f g : Carrier ) → test1 f g ≡  g ⁻¹ ∙ f ⁻¹ ∙ f ∙ g ∙  (f ∙ g) ⁻¹  ∙ ε
-test2 f g = _≡_.refl
-
-test3 : ( f g : Carrier ) → Carrier
-test3 f g = mp-flatten ((am (g ⁻¹) o am (f ⁻¹) ) o ( (am f o am g) o am ((f ∙ g) ⁻¹ ))) 
-
-test4 : ( f g : Carrier ) → test3 f g ≡ g ⁻¹ ∙ (f ⁻¹ ∙ (f ∙ (g ∙ ((f ∙ g) ⁻¹ ∙ ε))))
-test4 f g = _≡_.refl
-
-  
-∙-flatten : {x : Carrier } → (m : MP x ) → x ≈ mp-flatten m
-∙-flatten {x} (am x) = gsym (proj₂ identity _)
-∙-flatten {_} (am x o q) = ∙-cong grefl ( ∙-flatten q )
-∙-flatten (_o_ {_} {z} (_o_ {x} {y} p q) r) = lemma9 _ _ _ ( ∙-flatten {x ∙ y } (p o q )) ( ∙-flatten {z} r ) where
-   mp-cong : {p q r : Carrier} → (P : MP p)  → q ≈ r → mpf P q ≈ mpf P r
-   mp-cong (am x) q=r = ∙-cong grefl q=r
-   mp-cong (P o P₁) q=r = mp-cong P ( mp-cong P₁ q=r )
-   mp-assoc : {p q r : Carrier} → (P : MP p)  → mpf P q ∙ r ≈ mpf P (q ∙ r )
-   mp-assoc (am x) = assoc _ _ _ 
-   mp-assoc {p} {q} {r} (P o P₁) = begin
-       mpf P (mpf  P₁ q) ∙ r      ≈⟨ mp-assoc P ⟩
-       mpf P (mpf P₁ q ∙ r)       ≈⟨ mp-cong P (mp-assoc P₁)  ⟩ mpf P ((mpf  P₁) (q ∙ r))
-    ∎ where open EqReasoning (Algebra.Group.setoid G)
-   lemma9 : (x y z : Carrier) →  x ∙ y ≈ mpf p (mpf q ε) → z ≈ mpf r ε →  x ∙ y ∙ z ≈ mp-flatten ((p o q) o r)
-   lemma9 x y z t s = begin
-       x ∙ y ∙ z                    ≈⟨ ∙-cong t grefl  ⟩
-       mpf p (mpf q ε) ∙ z          ≈⟨ mp-assoc p ⟩
-       mpf p (mpf q ε ∙ z)          ≈⟨ mp-cong p (mp-assoc q ) ⟩
-       mpf p (mpf q (ε ∙ z))        ≈⟨ mp-cong p (mp-cong q (proj₁ identity _  )) ⟩
-       mpf p (mpf q z)              ≈⟨ mp-cong p (mp-cong q s) ⟩
-       mpf p (mpf q (mpf r ε))
-    ∎ where open EqReasoning (Algebra.Group.setoid G)
-
-grepl : { x y0 y1 z  : Carrier } → x ∙ y0 ≈ y1  → x ∙ ( y0 ∙ z ) ≈ y1 ∙ z 
-grepl eq = gtrans (gsym (assoc _ _ _ )) (∙-cong eq grefl )
-
-grm : { x y0 y1 z  : Carrier } → x ∙ y0 ≈ ε  → x ∙ ( y0 ∙ z ) ≈  z 
-grm eq = gtrans ( gtrans (gsym (assoc _ _ _ )) (∙-cong eq grefl )) ( proj₁ identity _ )
-
--- ∙-flattenl : {x : Carrier } → (m : MP x ) → x ≈ mp-flattenl m
--- ∙-flattenl (am x) = gsym (proj₂ identity _)
--- ∙-flattenl (q o am x) with ∙-flattenl q    -- x₁ ∙ x ≈ mpl q (am x o am ε) ,  t : x₁ ≈ mpl q (am ε)
--- ... | t = {!!}
--- ∙-flattenl (q o (x o y )) with ∙-flattenl q 
--- ... | t = gtrans (gsym (assoc _ _ _ )) {!!}
+open import Tactic.MonoidSolver using (solve; solve-macro)
 
 lemma5 : (f g : Carrier ) → g ⁻¹ ∙ f ⁻¹ ≈ (f ∙ g) ⁻¹
 lemma5 f g = begin
      g ⁻¹ ∙ f ⁻¹                                     ≈⟨ gsym (proj₂ identity _) ⟩
      g ⁻¹ ∙ f ⁻¹  ∙ ε                                ≈⟨ gsym (∙-cong grefl (proj₂ inverse _ )) ⟩
-     g ⁻¹ ∙ f ⁻¹  ∙ ( (f ∙ g) ∙ (f ∙ g) ⁻¹ )         ≈⟨ ∙-flatten ((am (g ⁻¹) o am (f ⁻¹) ) o ( (am f o am g) o am ((f ∙ g) ⁻¹ )))  ⟩
-     g ⁻¹ ∙ (f ⁻¹ ∙ (f ∙ (g ∙ ((f ∙ g) ⁻¹ ∙ ε))))    ≈⟨ ∙-cong grefl (gsym (assoc _ _ _ )) ⟩
+     g ⁻¹ ∙ f ⁻¹  ∙ ( (f ∙ g) ∙ (f ∙ g) ⁻¹ )         ≈⟨ solve monoid ⟩
      g ⁻¹ ∙ ((f ⁻¹ ∙ f) ∙ (g ∙ ((f ∙ g) ⁻¹ ∙ ε)))    ≈⟨ ∙-cong grefl (gtrans (∙-cong (proj₁ inverse _ ) grefl) (proj₁ identity _)) ⟩
-     g ⁻¹ ∙ (g ∙ ((f ∙ g) ⁻¹ ∙ ε))                   ≈⟨ gsym (assoc _ _ _) ⟩
+     g ⁻¹ ∙ (g ∙ ((f ∙ g) ⁻¹ ∙ ε))                   ≈⟨ solve monoid ⟩
      (g ⁻¹ ∙ g ) ∙ ((f ∙ g) ⁻¹ ∙ ε)                  ≈⟨ gtrans (∙-cong (proj₁ inverse _ ) grefl) (proj₁ identity _) ⟩
-     (f ∙ g) ⁻¹ ∙ ε                                  ≈⟨ proj₂ identity _ ⟩
+     (f ∙ g) ⁻¹ ∙ ε                                  ≈⟨ solve monoid ⟩
      (f ∙ g) ⁻¹
      ∎ where open EqReasoning (Algebra.Group.setoid G)
+
 

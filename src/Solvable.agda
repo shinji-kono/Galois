@@ -47,7 +47,7 @@ lemma4 : (g h : Carrier ) → [ h , g ] ≈ [ g , h ] ⁻¹
 lemma4 g h = begin
        [ h , g ]                               ≈⟨ grefl ⟩
        (h ⁻¹ ∙ g ⁻¹ ∙   h ) ∙ g                ≈⟨ assoc _ _ _ ⟩
-       h ⁻¹ ∙ g ⁻¹ ∙  (h ∙ g)                  ≈⟨ ∙-cong grefl (gsym (∙-cong lemma6 lemma6))  ⟩
+       h ⁻¹ ∙ g ⁻¹ ∙  (h ∙ g)                  ≈⟨ ∙-cong grefl (gsym (∙-cong f⁻¹⁻¹≈f f⁻¹⁻¹≈f))  ⟩
        h ⁻¹ ∙  g ⁻¹ ∙ ((h ⁻¹) ⁻¹ ∙ (g ⁻¹) ⁻¹)  ≈⟨  ∙-cong grefl (lemma5 _ _ )  ⟩
        h ⁻¹ ∙  g ⁻¹ ∙  (g ⁻¹ ∙ h ⁻¹) ⁻¹        ≈⟨ assoc _ _ _ ⟩
        h ⁻¹ ∙ (g ⁻¹ ∙  (g ⁻¹ ∙ h ⁻¹) ⁻¹)       ≈⟨ ∙-cong grefl (lemma5 (g ⁻¹ ∙ h ⁻¹ ) g ) ⟩
@@ -63,7 +63,7 @@ deriving-inv {suc i} {x} (ccong eq ix ) = ccong (⁻¹-cong eq) ( deriving-inv i
 
 idcomtr : (g  : Carrier ) → [ g , ε  ] ≈ ε 
 idcomtr g  = begin
-       (g ⁻¹ ∙ ε  ⁻¹ ∙   g ∙ ε )              ≈⟨ ∙-cong (∙-cong (∙-cong grefl (sym lemma3 )) grefl ) grefl ⟩ 
+       (g ⁻¹ ∙ ε  ⁻¹ ∙   g ∙ ε )              ≈⟨ ∙-cong (∙-cong (∙-cong grefl (sym ε≈ε⁻¹  )) grefl ) grefl ⟩ 
        (g ⁻¹ ∙ ε   ∙   g ∙ ε )                ≈⟨ ∙-cong (∙-cong (proj₂ identity _) grefl)  grefl ⟩
        (g ⁻¹   ∙   g ∙ ε     )                ≈⟨ ∙-cong (proj₁ inverse _ )   grefl ⟩
        (  ε  ∙ ε     )                        ≈⟨  proj₂ identity _  ⟩
@@ -73,7 +73,7 @@ idcomtr g  = begin
 idcomtl : (g  : Carrier ) → [ ε ,  g ] ≈ ε 
 idcomtl g  = begin
        (ε ⁻¹ ∙ g  ⁻¹ ∙   ε ∙ g )              ≈⟨ ∙-cong (proj₂ identity _) grefl ⟩ 
-       (ε ⁻¹ ∙ g  ⁻¹ ∙    g )                ≈⟨ ∙-cong (∙-cong (sym lemma3 ) grefl ) grefl ⟩
+       (ε ⁻¹ ∙ g  ⁻¹ ∙    g )                ≈⟨ ∙-cong (∙-cong (sym ε≈ε⁻¹  ) grefl ) grefl ⟩
        (ε  ∙ g  ⁻¹ ∙    g )                  ≈⟨ ∙-cong (proj₁ identity _) grefl ⟩
        (g ⁻¹   ∙    g     )                ≈⟨  proj₁ inverse _ ⟩
        ε
