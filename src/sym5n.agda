@@ -1,3 +1,5 @@
+{-# OPTIONS --guardedness #-}
+
 open import Level hiding ( suc ; zero )
 open import Algebra
 module sym5n where
@@ -18,6 +20,13 @@ open import  Relation.Binary.PropositionalEquality hiding ( [_] )
 
 open import Data.Fin
 open import Data.Fin.Permutation hiding (_∘ₚ_)
+
+open import Data.Nat.Base
+open import Data.Nat.Show using (show)
+open import Data.String using (String; _++_; lines)
+open import Data.Unit.Polymorphic as DP hiding (⊤)
+open import IO
+
 
 infixr  200 _∘ₚ_
 _∘ₚ_ = Data.Fin.Permutation._∘ₚ_
@@ -59,12 +68,12 @@ sym5solvable n = FListtoStr (CommFListN 5 n) where
    FListtoStr [] = ""
    FListtoStr (cons a x x₁) = primStringAppend (FLtoStr a) (primStringAppend "\n" (FListtoStr x))
 
-open import Codata.Musical.Notation
+-- open import Codata.Musical.Notation
 open import Data.Maybe hiding (_>>=_)
 open import Data.List  
 open import Data.Char  
-open import IO.Primitive
-open import Codata.Musical.Costring
+-- open import IO.Primitive
+-- open import Codata.Musical.Costring
 
 postulate
     getArgs : IO (List (List Char))
@@ -97,7 +106,7 @@ getNumArg1 ((x ∷ _) ∷ y) with charToDigit x
 -- agda --compile sym5n.agda
 --
 
-main : IO ⊤
-main = getArgs >>= (λ x →  putStrLn $ toCostring $ sym5solvable $ getNumArg1 x ) 
+main : IO {0ℓ} DP.⊤
+main = getArgs >>= (λ x →  putStrLn $ sym5solvable $ getNumArg1 x ) 
 
 

@@ -52,10 +52,11 @@ infixr 9 _<_∙_>
 
 open GroupMorphisms
 
-import Axiom.Extensionality.Propositional
-postulate f-extensionality : { n m : Level}  → Axiom.Extensionality.Propositional.Extensionality n m
-open import Tactic.MonoidSolver using (solve; solve-macro)
+-- import Axiom.Extensionality.Propositional
+-- postulate f-extensionality : { n m : Level}  → Axiom.Extensionality.Propositional.Extensionality n m
 
+open import Data.Empty
+open import Relation.Nullary
 
 record NormalSubGroup (A : Group c c )  : Set c  where
    open Group A
@@ -63,9 +64,6 @@ record NormalSubGroup (A : Group c c )  : Set c  where
        ⟦_⟧ : Group.Carrier A → Group.Carrier A
        normal :  IsGroupHomomorphism (GR A) (GR A)  ⟦_⟧
        comm : {a b :  Carrier } → b ∙ ⟦ a ⟧  ≈ ⟦ a ⟧  ∙ b
-       --
-       factor : (a b : Carrier) → Carrier
-       is-factor : (a b : Carrier) →  b ∙ ⟦ factor a b ⟧ ≈ a
 
 -- Set of a ∙ ∃ n ∈ N
 --
@@ -73,33 +71,42 @@ record an {A : Group c c }  (N : NormalSubGroup A ) (n x : Group.Carrier A  ) : 
     open Group A
     open NormalSubGroup N
     field
-        a : Group.Carrier A
+        a : Carrier 
         aN=x :  a ∙ ⟦ n ⟧ ≈ x
 
 record aN {A : Group c c }  (N : NormalSubGroup A )  : Set c where
+    open Group A
     field
-        n : Group.Carrier A
-        is-an : (x : Group.Carrier A) → an N n x
+        n : Carrier 
+        is-an : (x : Carrier) → an N n x
 
-qid : {A : Group c c }  (N : NormalSubGroup A )  → aN N
-qid {A} N = record { n = ε ; is-an = λ x → record { a = x ; aN=x = ? } } where
-       open Group A
-       open NormalSubGroup N
+f0 :  {A : Group c c }  (N : NormalSubGroup A )  (x y : Group.Carrier A) → an N x y
+f0 {A} N x y = record { a = y ∙ ⟦ x ⟧ ⁻¹ ; aN=x = gk02  } where
+   open Group A
+   open NormalSubGroup N
+   open IsGroupHomomorphism normal
+   open EqReasoning (Algebra.Group.setoid A)
+   open Gutil A
+   gk02 : {x g : Carrier } →  x ∙ ⟦ g ⟧ ⁻¹ ∙ ⟦ g ⟧ ≈ x
+   gk02 {x} {g}  = begin  x ∙ ⟦ g ⟧ ⁻¹ ∙ ⟦ g ⟧ ≈⟨ solve monoid  ⟩ 
+         x ∙  ( ⟦ g ⟧ ⁻¹ ∙ ⟦ g ⟧)  ≈⟨ ∙-cong grefl (proj₁ inverse _ ) ⟩ 
+         x ∙ ε  ≈⟨ proj₂ identity _  ⟩ 
+         x ∎
 
 _/_ : (A : Group c c ) (N  : NormalSubGroup A ) → Group c c
 _/_ A N  = record {
     Carrier  = aN N
     ; _≈_      = λ f g → ⟦ n f ⟧ ≈ ⟦ n g ⟧
     ; _∙_      = qadd
-    ; ε        = qid N
-    ; _⁻¹      = ?
+    ; ε        = qid 
+    ; _⁻¹      = λ f → record { n = n f ⁻¹ ; is-an = λ x → record { a = an.a (is-an f x) ∙  ⟦ n f ⟧  ∙ ⟦ n f ⟧  ; aN=x = qinv0 f x } } 
     ; isGroup = record { isMonoid  = record { isSemigroup = record { isMagma = record {
        isEquivalence = record {refl = grefl ; trans = gtrans ; sym = gsym }
-       ; ∙-cong = λ {x} {y} {u} {v} x=y u=v → ? }
-       ; assoc = ? }
-       ; identity =  ? , (λ q → ? )  }
-       ; inverse   = ( (λ x → ? ) , (λ x → ? ))
-       ; ⁻¹-cong   = λ i=j → ?
+       ; ∙-cong = λ {x} {y} {u} {v} x=y u=v → gtrans (homo _ _) ( gtrans (∙-cong x=y u=v)  (gsym (homo _ _) )) }
+       ; assoc = qassoc }
+       ; identity = (λ q →   ⟦⟧-cong (proj₁ identity _) ) , (λ q → ⟦⟧-cong (proj₂ identity _) )  }
+       ; inverse   =  (λ x → ⟦⟧-cong (proj₁ inverse _  )) , (λ x → ⟦⟧-cong (proj₂ inverse _ ) )
+       ; ⁻¹-cong   = λ {x} {y} → i-conv  {x} {y}
       }
    } where
        open Group A
@@ -113,15 +120,37 @@ _/_ A N  = record {
        qadd f g = record { n = n f ∙ n g  ; is-an = λ x → record { a = x ⁻¹ ∙ ( a (is-an f x) ∙ a (is-an g x))  ; aN=x = qadd0 }  } where
            qadd0 : {x : Carrier} →   x ⁻¹ ∙ (a (is-an f x) ∙ a (is-an g x)) ∙ ⟦ n f ∙ n g ⟧ ≈ x
            qadd0 {x} = begin
-              x ⁻¹ ∙ (a (is-an f x) ∙ a (is-an g x)) ∙ ⟦ n f ∙ n g ⟧ ≈⟨ ? ⟩
+              x ⁻¹ ∙ (a (is-an f x) ∙ a (is-an g x)) ∙ ⟦ n f ∙ n g ⟧ ≈⟨ solve monoid ⟩
               x ⁻¹ ∙  (a (is-an f x) ∙ a (is-an g x) ∙ ⟦ n f ∙ n g ⟧) ≈⟨ ? ⟩
-              x ⁻¹ ∙  (a (is-an f x) ∙ a (is-an g x) ∙ ( ⟦ n f ⟧  ∙ ⟦ n g ⟧ )) ≈⟨ ? ⟩
+              x ⁻¹ ∙  (a (is-an f x) ∙ a (is-an g x) ∙ ( ⟦ n f ⟧  ∙ ⟦ n g ⟧ )) ≈⟨ solve monoid ⟩
               x ⁻¹ ∙  (a (is-an f x) ∙ ( a (is-an g x) ∙  ⟦ n f ⟧)  ∙ ⟦ n g ⟧)  ≈⟨ ? ⟩
               x ⁻¹ ∙  (a (is-an f x) ∙ ( ⟦ n f ⟧ ∙ a (is-an g x) )  ∙ ⟦ n g ⟧)  ≈⟨ ? ⟩
               x ⁻¹ ∙  ((a (is-an f x) ∙ ⟦ n f ⟧ ) ∙ ( a (is-an g x)   ∙ ⟦ n g ⟧))  ≈⟨ ? ⟩
-              x ⁻¹ ∙  ((a (is-an f x) ∙ ⟦ n f ⟧ ) ∙ ( a (is-an g x)   ∙ ⟦ n g ⟧))  ≈⟨ ? ⟩
-              x ⁻¹ ∙  (x ∙ x)  ≈⟨ ? ⟩
+              x ⁻¹ ∙  (x ∙ x)  ≈⟨ solve monoid ⟩
+              (x ⁻¹ ∙  x ) ∙ x  ≈⟨ ? ⟩
+              ε ∙ x  ≈⟨ solve monoid ⟩
+              x ∎
+       qinv0 : (f : aN N) → (x : Carrier ) → (a (is-an f x) ∙ ⟦ n f ⟧ ∙ ⟦ n f ⟧) ∙ ⟦ n f ⁻¹ ⟧ ≈ x
+       qinv0 f x = begin
+          (a (is-an f x) ∙ ⟦ n f ⟧ ∙ ⟦ n f ⟧) ∙ ⟦ n f ⁻¹ ⟧ ≈⟨ ? ⟩
+           a (is-an f x) ∙ ⟦ n f ⟧  ≈⟨ an.aN=x (is-an f x) ⟩
+          x ∎
+       qid :  aN N
+       qid = record { n = ε ; is-an = λ x → record { a = x ; aN=x = qid1 } } where
+           qid1 : {x : Carrier } →  x ∙ ⟦ ε ⟧ ≈ x
+           qid1 {x} = begin
+             x ∙ ⟦ ε ⟧ ≈⟨ ∙-cong grefl ε-homo ⟩
+             x ∙ ε  ≈⟨ proj₂ identity _ ⟩
              x ∎
+       qassoc : (f g h : aN N) → ⟦ n ( qadd (qadd f g) h) ⟧ ≈  ⟦ n( qadd f (qadd g h)) ⟧
+       qassoc f g h = ⟦⟧-cong (assoc  _ _ _ )
+       i-conv : {x y : aN N} → ⟦ n x ⟧ ≈ ⟦ n y ⟧ →  ⟦ n x ⁻¹ ⟧ ≈ ⟦ n y ⁻¹ ⟧ 
+       i-conv {x} {y} nx=ny = begin
+          ⟦ n x ⁻¹ ⟧ ≈⟨ ⁻¹-homo _ ⟩
+          ⟦ n x ⟧ ⁻¹  ≈⟨ ⁻¹-cong nx=ny ⟩
+          ⟦ n y ⟧ ⁻¹  ≈⟨ gsym ( ⁻¹-homo _)  ⟩
+          ⟦ n y ⁻¹ ⟧  ∎
+
 
 -- K ⊂ ker(f)
 K⊆ker : (G H : Group c c)  (K : NormalSubGroup G) (f : Group.Carrier G → Group.Carrier H ) → Set c
@@ -142,58 +171,43 @@ module GK (G : Group c c) (K : NormalSubGroup G) where
     open Gutil G
 
     φ : Group.Carrier G → Group.Carrier (G / K )
-    φ g = record { n = factor ε g ; is-an = λ x → record { a = x ∙ ( ⟦ factor ε g ⟧ ⁻¹)   ; aN=x = ?  } }
+    φ g = record { n = g ; is-an = λ x → record { a = x ∙ ( ⟦ g ⟧ ⁻¹)   ; aN=x = gk02  } } where
+       gk02 : {x : Carrier } →  x ∙ ⟦ g ⟧ ⁻¹ ∙ ⟦ g ⟧ ≈ x
+       gk02 {x} = begin  x ∙ ⟦ g ⟧ ⁻¹ ∙ ⟦ g ⟧ ≈⟨ solve monoid  ⟩ 
+         x ∙  ( ⟦ g ⟧ ⁻¹ ∙ ⟦ g ⟧)  ≈⟨ ∙-cong grefl (proj₁ inverse _ ) ⟩ 
+         x ∙ ε  ≈⟨ proj₂ identity _  ⟩ 
+         x ∎
 
     φ-homo : IsGroupHomomorphism (GR G) (GR (G / K)) φ
     φ-homo = record {⁻¹-homo = λ g → ?  ; isMonoidHomomorphism = record { ε-homo = ? ; isMagmaHomomorphism = record { homo = ? ; isRelHomomorphism =
        record { cong = ? } }}}
+
+    -- gk03 : {f : Group.Carrier (G / K) } → ⟦ n f  ⟧ ≈ ⟦ ⟦ n f ⟧ ⟧  -- a (is-an f x)  ∙ ⟦ n f ⟧ ≡ x
+    -- gk03 {x} = ?                                                   --  
 
     φe : (Algebra.Group.setoid G)  Function.Equality.⟶ (Algebra.Group.setoid (G / K))
     φe = record { _⟨$⟩_ = φ ; cong = ?  }  where
            φ-cong : {f g : Carrier } → f ≈ g  → ⟦ n (φ f ) ⟧ ≈ ⟦ n (φ g ) ⟧
            φ-cong = ?
 
-    -- inverse ofφ
-    --  f = λ x → record { a = af ; n = fn ; aN=x = x ≈ af ∙ ⟦ fn ⟧  )   = (af)K  , fn ≡ factor x af , af ≡ a (f x)
-    --        (inv-φ f)K ≡ (af)K
-    --           φ (inv-φ f) x → f (h0 x)
-    --           f x → φ (inv-φ f) (h1 x)
-
     inv-φ : Group.Carrier (G / K ) → Group.Carrier G
-    inv-φ f = ⟦ n f ⟧ ⁻¹
-
+    inv-φ f =  n f    -- ⟦ n f ⟧ ( if we have gk03 )
 
     cong-i : {f g : Group.Carrier (G / K ) } → ⟦ n f ⟧ ≈ ⟦ n g ⟧ → inv-φ f ≈ inv-φ g
-    cong-i = ?
+    cong-i {f} {g} nf=ng = ? 
 
     is-inverse : (f : aN K  ) →  ⟦ n (φ (inv-φ f) ) ⟧ ≈ ⟦ n f ⟧
     is-inverse f = begin
        ⟦ n (φ (inv-φ f) ) ⟧  ≈⟨ grefl  ⟩
-       ⟦ n (φ (⟦ n f  ⟧ ⁻¹) ) ⟧  ≈⟨ grefl  ⟩
-       ⟦ factor ε (⟦ n f  ⟧ ⁻¹) ⟧  ≈⟨ ? ⟩
-       ( ⟦ n f ⟧ ∙ ⟦ n f  ⟧ ⁻¹) ∙  ⟦ factor ε (⟦ n f  ⟧ ⁻¹) ⟧  ≈⟨ ? ⟩
-       ⟦ n f ⟧ ∙ ( ⟦ n f  ⟧ ⁻¹ ∙  ⟦ factor ε (⟦ n f  ⟧ ⁻¹) ⟧ ) ≈⟨ ∙-cong grefl (is-factor ε _ ) ⟩
-       ⟦ n f ⟧ ∙ ε  ≈⟨ ? ⟩
+       ⟦ n (φ ( n f  ) ) ⟧  ≈⟨ grefl  ⟩
        ⟦ n f ⟧ ∎
 
     φ-surjective : Surjective φe
     φ-surjective = record { from = record { _⟨$⟩_ = inv-φ ; cong = λ {f} {g} → cong-i {f} {g} }  ; right-inverse-of = is-inverse }
 
-    gk00 : {x : Carrier } → ⟦ factor ε x ⟧ ⁻¹ ≈ x
-    gk00 {x} = begin
-        ⟦ factor ε x ⟧ ⁻¹ ≈⟨ ? ⟩ 
-        ( x ⁻¹ ∙ ( x ∙ ⟦ factor ε x ⟧) ) ⁻¹ ≈⟨ ? ⟩ 
-        ( x ⁻¹ ∙ ( x ∙ ⟦ factor ε x ⟧) ) ⁻¹ ≈⟨ ⁻¹-cong (∙-cong grefl (is-factor ε x))  ⟩ 
-        ( x ⁻¹ ∙ ε ) ⁻¹ ≈⟨ ? ⟩ 
-        ( x ⁻¹  ) ⁻¹ ≈⟨ ? ⟩ 
-        x ∎
-
     gk01 : (x : Group.Carrier (G / K ) ) → (G / K) < φ ( inv-φ x ) ≈ x >
     gk01 x = begin
-        ⟦ factor ε ( inv-φ x) ⟧  ≈⟨ ? ⟩ 
-        ( inv-φ x ) ⁻¹ ∙ ( inv-φ x ∙ ⟦ factor ε ( inv-φ x) ⟧)  ≈⟨ ∙-cong grefl (is-factor ε _ ) ⟩ 
-        ( inv-φ x ) ⁻¹ ∙ ε  ≈⟨ ? ⟩ 
-        ( ⟦ n x ⟧  ⁻¹) ⁻¹   ≈⟨ ? ⟩ 
+        ⟦ inv-φ x ⟧  ≈⟨ grefl ⟩ 
         ⟦ n x ⟧ ∎
 
 
@@ -241,8 +255,7 @@ FundamentalHomomorphismTheorm G H f homo K kf = record {
     open EqReasoning (Algebra.Group.setoid H)
     is-solution : (x : Group.Carrier G)  →  f x ≈ h ( φ x )
     is-solution x = begin
-         f x ≈⟨ gsym ( ⟦⟧-cong (gk00 ))  ⟩
-         f ( Group._⁻¹ G  ⟦ factor (Group.ε G) x  ⟧   ) ≈⟨ grefl  ⟩
+         f x ≈⟨ grefl  ⟩
          h ( φ x ) ∎ 
     unique : (h1 : Group.Carrier (G / K ) → Group.Carrier H)  → (h1-homo : IsGroupHomomorphism (GR (G / K)) (GR H) h1 )
        → ( (x : Group.Carrier G)  →  f x ≈ h1 ( φ x ) ) → ( ( x : Group.Carrier (G / K)) → h x ≈ h1 x )

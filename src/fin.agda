@@ -2,7 +2,7 @@
 
 module fin where
 
-open import Data.Fin hiding (_<_ ; _≤_ )
+open import Data.Fin hiding (_<_ ; _≤_ ; _>_ )
 open import Data.Fin.Properties hiding ( <-trans )
 open import Data.Nat
 open import logic

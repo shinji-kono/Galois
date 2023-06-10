@@ -1,3 +1,6 @@
+--
+-- checking does not terminate, sorry
+--
 open import Level hiding ( suc ; zero )
 open import Algebra
 module sym5a where

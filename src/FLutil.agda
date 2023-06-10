@@ -2,7 +2,7 @@
 module FLutil where
 
 open import Level hiding ( suc ; zero )
-open import Data.Fin hiding ( _<_  ; _≤_ ; _-_ ; _+_ ; _≟_)
+open import Data.Fin hiding (_<_  ; _>_ ; _≤_ ; _-_ ; _+_ ; _≟_)
 open import Data.Fin.Properties hiding ( <-trans ; ≤-refl ; ≤-trans ; ≤-irrelevant ; _≟_ ) renaming ( <-cmp to <-fcmp )
 open import Data.Fin.Permutation  -- hiding ([_,_])
 open import Data.Nat -- using (ℕ; suc; zero; s≤s ; z≤n )
@@ -19,7 +19,7 @@ open import nat
 
 infixr  100 _::_
 
-data  FL : (n : ℕ )→ Set where
+data  FL : (n : ℕ ) → Set where
    f0 :  FL 0 
    _::_ :  { n : ℕ } → Fin (suc n ) → FL n → FL (suc n)
 
