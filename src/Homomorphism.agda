@@ -176,10 +176,10 @@ K⊆ker G H K f = (x : Group.Carrier G ) → P x → f x ≈ ε   where
   open Group H
   open NormalSubGroup K
 
-Imf : {c d : Level} (G H : Group c d)
-    (f : Group.Carrier G → Group.Carrier H )
+Ker : {c d : Level} (G H : Group c d)
+    {f : Group.Carrier G → Group.Carrier H }
     (f-homo : IsGroupHomomorphism (GR G) (GR H) f ) →  NormalSubGroup {d} G 
-Imf {c} {d} G H f f-homo = record {
+Ker {c} {d} G H {f} f-homo = record {
           P = λ x → f x ≈ ε
         ; Pε = ε-homo 
         ; P⁻¹ = im01
@@ -199,12 +199,6 @@ Imf {c} {d} G H f f-homo = record {
         f a ⁻¹  ≈⟨ ⁻¹-cong fa=e ⟩
         ε ⁻¹  ≈⟨ gsym ε≈ε⁻¹ ⟩
         ε ∎  
-    im00 : (a : GC) → f a ≈ ε  → f ((G Group.⁻¹) a) ≈ ε
-    im00 a fa=e = begin 
-       f ((G Group.⁻¹) a) ≈⟨ ⁻¹-homo _ ⟩  
-       f a ⁻¹ ≈⟨ ⁻¹-cong fa=e ⟩  
-       ε ⁻¹  ≈⟨ gsym ε≈ε⁻¹ ⟩  
-       ε  ∎ 
     im02 : {a b : GC} → G < a ≈ b > → f a ≈ ε → f b ≈ ε
     im02 {a} {b} a=b fa=e = begin
        f b ≈⟨ ⟦⟧-cong (GU.gsym a=b) ⟩
@@ -229,10 +223,10 @@ Imf {c} {d} G H f f-homo = record {
        ε ∙ ε  ≈⟨ proj₁ identity _ ⟩
        ε ∎ 
 
-FactorGroup : {c d : Level} (G  : Group c d) {H : Group c d}
+Im : {c d : Level} (G  : Group c d) {H : Group c d}
     {f : Group.Carrier G → Group.Carrier H }
     (f-homo : IsGroupHomomorphism (GR G) (GR H) f ) →  Group _ _
-FactorGroup G {H} {f} f-homo = G / Imf G H f f-homo
+Im G {H} {f} f-homo = G / Ker G H f-homo
 
 module GK {c d : Level} (G : Group c d) (K : NormalSubGroup G  ) where
     φ : Group.Carrier G → Group.Carrier (G / K )  -- a → aN
@@ -285,7 +279,7 @@ FundamentalHomomorphismTheorm {c} {d} G H f f-homo K kf = record {
            ε ∙ h y  ≈⟨ proj₁ identity _ ⟩ 
            h y   ∎ 
     h-homo :  IsGroupHomomorphism (GR (G / K ) ) (GR H) h
-    h-homo = record {    -- this is essentially f-homo 
+    h-homo = record {    -- this is essentially f-homo except cong
      isMonoidHomomorphism = record {
           isMagmaHomomorphism = record {
              isRelHomomorphism = record { cong = λ {x} {y} eq → h04 eq  }
@@ -301,11 +295,10 @@ FundamentalHomomorphismTheorm {c} {d} G H f f-homo K kf = record {
     unique h1 h1-homo h1-is-solution x = begin
          h x ≈⟨ grefl ⟩
          f x ≈⟨ h1-is-solution _ ⟩
-         h1 ( φ x ) ≈⟨ IsGroupHomomorphism.⟦⟧-cong h1-homo (AN.nrefl G K)  ⟩
          h1 x ∎ 
 -- 
 -- Fundamental Homomorphism Theorm on G / Imf f gives another form of Fundamental Homomorphism Theorm
---    i.e.  G / Imf f ≈ Ker f
+--    i.e.  G / Ker f ≈ Im f
 
 
 
