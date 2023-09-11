@@ -54,9 +54,7 @@ m < x ≈ y > =  Group._≈_ m x y
 
 infixr 9 _<_∙_>
 
--- assuming Homomorphism is too strong
---
-record NormalSubGroup {l c d : Level} (A : Group c d )  : Set (Level.suc (l Level.⊔ (c Level.⊔ d))) where
+record SubGroup {l c d : Level} (A : Group c d )  : Set (Level.suc (l Level.⊔ (c Level.⊔ d))) where
    open Group A
    field                           
        P : Carrier  → Set l
@@ -64,21 +62,38 @@ record NormalSubGroup {l c d : Level} (A : Group c d )  : Set (Level.suc (l Leve
        P⁻¹ : (a : Carrier  ) → P a → P (a ⁻¹)
        P≈ :  {a b : Carrier  } → a ≈ b → P a → P b
        P∙ :  {a b : Carrier  } → P a → P b → P (  a ∙ b  )
+
+-- assuming Homomorphism is too strong
+--
+record NormalSubGroup {l c d : Level} (A : Group c d )  : Set (Level.suc (l Level.⊔ (c Level.⊔ d))) where
+   open Group A
+   field                           
+       Psub : SubGroup {l} A
        -- gN ≈ Ng
-       Pcomm : {a b : Carrier  }  → P a  →  P ( b ∙  ( a  ∙ b ⁻¹ ) )
+       Pcomm : {a b : Carrier  }  → SubGroup.P Psub a  →  SubGroup.P Psub ( b ∙  ( a  ∙ b ⁻¹ ) )
+   P : Carrier  → Set l
+   P = SubGroup.P Psub
+   Pε : P ε
+   Pε = SubGroup.Pε Psub
+   P⁻¹ : (a : Carrier  ) → P a → P (a ⁻¹)
+   P⁻¹ = SubGroup.P⁻¹ Psub
+   P≈ :  {a b : Carrier  } → a ≈ b → P a → P b
+   P≈ = SubGroup.P≈ Psub
+   P∙ :  {a b : Carrier  } → P a → P b → P (  a ∙ b  )
+   P∙ = SubGroup.P∙ Psub
 
 import Relation.Binary.Reasoning.Setoid as EqReasoning
 
-record Nelm {c d : Level} {A : Group c d } (n : NormalSubGroup {d} A) : Set  (Level.suc c ⊔ d)  where
+record Nelm {c d e : Level} (A : Group c d ) (n : SubGroup {e} A) : Set  (Level.suc e ⊔ (Level.suc c ⊔ d))  where
    open Group A
-   open NormalSubGroup n 
+   open SubGroup n 
    field                           
        elm : Carrier
        Pelm : P elm
 
-NGroup : {c d : Level} {A : Group c d } (n : NormalSubGroup A) → Group  (Level.suc c ⊔ d)  d
-NGroup {_} {_} {A} n = record {
-      Carrier        = Nelm n
+SGroup : {c d e : Level} (A : Group c d ) (n : SubGroup {e} A) → Group  (Level.suc e ⊔ (Level.suc c ⊔ d))  d
+SGroup {_} {_} {_} A n = record {
+      Carrier        = Nelm A n
     ; _≈_            = λ x y → elm x ≈ elm y
     ; _∙_            = λ x y → record { elm = elm x ∙ elm y ; Pelm = P∙ (Pelm x) (Pelm y) }
     ; ε              = record { elm = ε ; Pelm = Pε }
@@ -94,7 +109,7 @@ NGroup {_} {_} {A} n = record {
        ; ⁻¹-cong   = IsGroup.⁻¹-cong ga }
    }  where
        open Group A
-       open NormalSubGroup n 
+       open SubGroup n 
        open Nelm 
        ga = Group.isGroup A
 
