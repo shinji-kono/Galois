@@ -32,7 +32,7 @@ open import Tactic.MonoidSolver using (solve; solve-macro)
 --
 --       f
 --    G --→ H
---    |   /
+--    |   ↗ 
 --  φ |  / h
 --    ↓ /
 --    G/K
@@ -61,8 +61,7 @@ module AN {c d : Level} (A : Group c d) (N : NormalSubGroup {d} A  ) where
     open NormalSubGroup N
     open EqReasoning (Algebra.Group.setoid A)
     open Gutil A
-    open aNeq
-    --
+    open aNeq --
     -- (aN)(bN) = a(Nb)N = a(bN)N = (ab)NN = (ab)N.
     --
     -- a =n= b ↔ a . b ⁻¹ ∈ N
@@ -108,7 +107,7 @@ module AN {c d : Level} (A : Group c d) (N : NormalSubGroup {d} A  ) where
            b ∙ n ≈⟨ car (gsym eq) ⟩
            a ∙ n ≈⟨ eq1 ⟩
            x ∎
-    aneq : {a b : Carrier } → a ≈ b → aNeq N a b
+    aneq : {a b : Carrier } → a ≈ b → aNeq N a b  -- a ≈ b → aN ≈ bN
     aneq {a} {b} eq = record { eq→ = λ {x} lt → an-cong eq lt ; eq← = λ lt → an-cong (gsym eq) lt }   
     _=n=_ = aNeq N
 
@@ -119,6 +118,9 @@ module AN {c d : Level} (A : Group c d) (N : NormalSubGroup {d} A  ) where
     ntrans : {x y  z : Carrier} → x =n= y → y =n= z → x =n= z
     ntrans {x} {y} {z} x=y y=z = record { eq→ = λ {lt} ix → eq→ y=z (eq→ x=y ix) 
          ; eq← =  λ {lt} ix → eq← x=y (eq← y=z ix) }
+
+-- factor group has the same carrier as the original group
+--     so h = f 
 
 _/_ : {c d : Level} (A : Group c d ) (N  : NormalSubGroup A ) → Group c (Level.suc c ⊔ d) 
 _/_ A N  = record {
@@ -132,8 +134,7 @@ _/_ A N  = record {
            ; trans = ntrans ; sym = λ a=b → nsym a=b 
           }
        ; ∙-cong = λ {x} {y} {u} {v} x=y u=v → gk00 x=y u=v }
-       ; assoc = gkassoc }
-       ; identity =  (λ a → aneq (proj₁ identity _)) , (λ a → aneq (proj₂ identity _) )  }
+       ; assoc = gkassoc } ; identity =  (λ a → aneq (proj₁ identity _)) , (λ a → aneq (proj₂ identity _) )  }
        ; inverse   =  (λ a → aneq (proj₁ inverse _)) , (λ x → aneq (proj₂ inverse _) ) 
        ; ⁻¹-cong   = gkcong⁻¹
       }

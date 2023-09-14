@@ -108,8 +108,6 @@ open import NormalSubgroup
 import Algebra.Morphism.Definitions as MorphismDefinitions
 open import Algebra.Morphism.Structures
 
--- Commutator is normal subgroup of G
-
 Pcomm : {a b : Carrier} → (i : ℕ) → deriving i a → deriving i (b ∙ (a ∙ b ⁻¹ ))
 Pcomm {a} {b} zero (lift tt) = lift tt
 Pcomm {.([ _ , _ ])} {b} (suc i) (comm {g} {h} pg ph ) = ccong cc2 (comm (Pcomm {_} {b} i pg) (Pcomm {_} {b} i ph)) where
@@ -136,44 +134,42 @@ Pcomm {.([ _ , _ ])} {b} (suc i) (comm {g} {h} pg ph ) = ccong cc2 (comm (Pcomm 
     b ∙ ([ g , h ] ∙ b ⁻¹) ∎
 Pcomm {a} {b} (suc i) (ccong f=a pa) = ccong (∙-cong grefl (∙-cong f=a grefl)) (Pcomm {_} {b} (suc i) pa)
 
+-- Finitely Generated Commutator is normal subgroup of G
+
 -- a proudct of commutators may not be a commutator
 -- so we have to use finite products of commutators
 
-data iCommutator (i : ℕ) : (j : ℕ) → Carrier → Set (Level.suc n ⊔ m) where
-  iunit : {a : Carrier} → deriving i a  →  iCommutator i zero a
-  icoml : {j : ℕ} → {a b : Carrier} → deriving i a → iCommutator i j b → iCommutator i (suc j) (a ∙ b)
-  icomr : {j : ℕ} → {a b : Carrier} → deriving i a → iCommutator i j b → iCommutator i (suc j) (b ∙ a)
-  iccong : {j : ℕ} → {a b : Carrier} → a ≈ b → iCommutator i j b → iCommutator i j a
+data iCommutator (i : ℕ) : Carrier → Set (Level.suc n ⊔ m) where
+  iunit : {a : Carrier} → deriving i a  →  iCommutator i a
+  i∙ : {a b : Carrier} → iCommutator i a → iCommutator i  b → iCommutator i  (a ∙ b)
+  iccong : {a b : Carrier} → a ≈ b → iCommutator i  b → iCommutator i  a
 
-record IC (i : ℕ ) (ica : Carrier) : Set (Level.suc n ⊔ m) where
-  field 
-     icn : ℕ
-     icc : iCommutator i icn ica
-
-CommGroup : (i : ℕ) → NormalSubGroup G 
-CommGroup i = record {
-     P = IC i
-   ; Pε = record { icn = 0; icc = iunit deriving-ε }
+CommNormal : (i : ℕ) → NormalSubGroup G 
+CommNormal i = record {
+   Psub = record {
+     P = iCommutator i
+   ; Pε = iunit deriving-ε 
    ; P⁻¹ =  cg00
-   ; P≈ = λ b=a ic → record { icn = icn ic ; icc = iccong (sym b=a) (icc ic) }
-   ; P∙ = cg01
-   ; Pcomm = cg02
+   ; P≈ = λ b=a ic → iccong (sym b=a) ic
+   ; P∙ = cg01 
+   }
+   ; Pcomm = cg02 
  }  where
-     open IC
-     cg00 :  (a : Carrier) → IC i a → IC i (a ⁻¹)
-     cg00 a record { icn = .zero ; icc = iunit  x } = record { icn = 0 ; icc = iunit (deriving-inv x) }
-     cg00 .((G Group.∙ _) _) record { icn = suc j ; icc = icoml ia icc₁ } with cg00 _ record { icn = _ ; icc = icc₁ } 
-     ... | ib = record { icn = suc (icn ib) ; icc = iccong (sym (lemma5 _ _ )) ( icomr (deriving-inv ia) (icc ib)) }
-     cg00 .((G Group.∙ _) _) record { icn = suc j ; icc = icomr ia icc₁ } with cg00 _ record { icn = _ ; icc = icc₁ } 
-     ... | ib = record { icn = suc (icn ib) ; icc = iccong (sym (lemma5 _ _ )) ( icoml (deriving-inv ia) (icc ib)) }
-     cg00 _ record { icn = j ; icc = iccong eq icc₁ } with cg00 _ record { icn = _ ; icc = icc₁ } 
-     ... | ib = record { icn = icn ib ; icc = iccong (⁻¹-cong eq) (icc ib) }
-     cg01 : {a b : Carrier} → IC i a → IC i b → IC i (a ∙ b)
-     cg01 {a} {b} record { icn = .zero ; icc = (iunit x) } ib = ?
-     cg01 {.((G Group.∙ _) _)} {b} record { icn = .(suc _) ; icc = (icoml x icc₁) } ib = ?
-     cg01 {.((G Group.∙ _) _)} {b} record { icn = .(suc _) ; icc = (icomr x icc₁) } ib = ?
-     cg01 {a} {b} record { icn = icn ; icc = (iccong x icc₁) } ib = ?
-     cg02 :  {a b : Carrier} → IC i a → IC i (b ∙ (a ∙ b ⁻¹))
-     cg02 = ?
+     cg00 :  (a : Carrier) → iCommutator i a → iCommutator i (a ⁻¹)
+     cg00 a (iunit x) = iunit (deriving-inv x)
+     cg00 .((G Group.∙ _) _) (i∙ ic ic₁) = iccong (gsym (lemma5 _ _)) ( i∙ (cg00 _ ic₁) (cg00 _ ic) )
+     cg00 a (iccong eq ic) = iccong (⁻¹-cong eq) (cg00 _ ic)
+     cg01 : {a b : Carrier} → iCommutator i a → iCommutator i b → iCommutator i (a ∙ b)
+     cg01 {a} {b} ia ib = i∙  ia ib
+     cg02 : {a b : Carrier} → iCommutator i a → iCommutator i (b ∙ (a ∙ b ⁻¹))
+     cg02 {a} {b} (iunit da) = iunit ( Pcomm i da )
+     cg02 {a} {b} (i∙ {a₁} {b₁} ia ib)  = iccong cg03 (i∙ (cg02 {a₁} {b} ia) (cg02 {b₁} {b} ib)) where
+        cg03 : b ∙ (a₁ ∙ b₁ ∙ b ⁻¹) ≈  b ∙ (a₁ ∙ b ⁻¹) ∙ (b ∙ (b₁ ∙ b ⁻¹))
+        cg03 = begin
+           b ∙ (a₁ ∙ b₁ ∙ b ⁻¹) ≈⟨ solve monoid ⟩
+           b ∙ (a₁ ∙ ε ∙ b₁ ∙ b ⁻¹) ≈⟨ cdr (car (car (cdr (gsym (proj₁ inverse _))))) ⟩
+           b ∙ (a₁ ∙ (b ⁻¹ ∙ b ) ∙ b₁ ∙ b ⁻¹) ≈⟨ solve monoid ⟩
+            b ∙ (a₁ ∙ b ⁻¹) ∙ (b ∙ (b₁ ∙ b ⁻¹)) ∎ 
+     cg02 {a} {b} (iccong eq ia) = iccong (cdr (car eq)) ( cg02 {_} {b} ia )
 
 
