@@ -1,4 +1,4 @@
-{-# OPTIONS --allow-unsolved-metas #-}
+{-# OPTIONS --cubical-compatible --safe #-}
 
 -- fundamental homomorphism theorem
 --
@@ -224,48 +224,6 @@ Ker {c} {d} G H {f} f-homo = record { Psub = record {
        ε ∙ ε  ≈⟨ proj₁ identity _ ⟩
        ε ∎ 
 
-record IsImage {c d : Level} (G  : Group c d) (H : Group c d)
-    {f : Group.Carrier G → Group.Carrier H }
-    (f-homo : IsGroupHomomorphism (GR G) (GR H) f ) (x : Group.Carrier H) : Set (c Level.⊔ d) where
-   field
-      gelm : Group.Carrier G
-      x=fg : H < x ≈ f gelm >
-
-
-Im : {c d : Level} (G  : Group c d) {H : Group c d}
-    {f : Group.Carrier G → Group.Carrier H }
-    (f-homo : IsGroupHomomorphism (GR G) (GR H) f ) →  SubGroup {c Level.⊔ d} H
-Im G {H} {f} f-homo = record {
-       P = λ x → IsImage G H f-homo x
-     ; Pε = record { gelm = Group.ε G ; x=fg = gsym ε-homo }
-     ; P⁻¹ = λ x imx → record { gelm = Group._⁻¹ G (gelm imx) ; x=fg = im00 (x=fg imx) }
-     ; P≈ = im01
-     ; P∙ = im02 } where
-         open IsImage
-         open Group H
-         open Gutil H
-         open IsGroupHomomorphism f-homo
-         open EqReasoning (Algebra.Group.setoid H)
-         GC = Group.Carrier G
-         im00 : {x : Carrier } {y : GC } → x ≈ f y  → x ⁻¹ ≈ f ((G Group.⁻¹) y )
-         im00 {x} {y} x=fy = begin
-            x ⁻¹ ≈⟨ ⁻¹-cong x=fy ⟩
-            (f y) ⁻¹ ≈⟨ gsym ( ⁻¹-homo _)  ⟩
-            f ((G Group.⁻¹) y ) ∎
-         im01 : {a b : Carrier} → a ≈ b → IsImage G H f-homo a → IsImage G H f-homo b
-         im01 {a} {b} a=b ima = record { gelm = _ ; x=fg = gtrans (gsym a=b) (x=fg ima) }
-         im02 :  {a b : Carrier} →
-            IsImage G H f-homo a →
-            IsImage G H f-homo b → IsImage G H f-homo (a ∙ b)
-         im02 {a} {b} isa isb = record { gelm = G < gelm isa ∙ gelm isb > ; x=fg = im03 } where
-              im03 : a ∙ b ≈ f (G < gelm isa ∙ gelm isb > )
-              im03 = begin
-                   a ∙ b ≈⟨ ∙-cong (x=fg isa) (x=fg isb)  ⟩ 
-                   f (gelm isa ) ∙ f (gelm isb ) ≈⟨ gsym (homo _ _ ) ⟩
-                   f (G < gelm isa ∙ gelm isb > ) ∎
-
-
-
 
 module GK {c d : Level} (G : Group c d) (K : NormalSubGroup G  ) where
     φ : Group.Carrier G → Group.Carrier (G / K )  -- a → aN
@@ -335,8 +293,50 @@ FundamentalHomomorphismTheorm {c} {d} G H f f-homo K kf = record {
          f x ≈⟨ h1-is-solution _ ⟩
          h1 x ∎ 
 -- 
--- Another from of Fundamental Homomorphism Theorm 
+-- Another form of Fundamental Homomorphism Theorm 
 --    i.e.  G / Ker f ≈ Im f
+
+record IsImage {c d : Level} (G  : Group c d) (H : Group c d)
+    {f : Group.Carrier G → Group.Carrier H }
+    (f-homo : IsGroupHomomorphism (GR G) (GR H) f ) (x : Group.Carrier H) : Set (c Level.⊔ d) where
+   field
+      gelm : Group.Carrier G
+      x=fg : H < x ≈ f gelm >
+
+
+Im : {c d : Level} (G  : Group c d) {H : Group c d}
+    {f : Group.Carrier G → Group.Carrier H }
+    (f-homo : IsGroupHomomorphism (GR G) (GR H) f ) →  SubGroup {c Level.⊔ d} H
+Im G {H} {f} f-homo = record {
+       P = λ x → IsImage G H f-homo x
+     ; Pε = record { gelm = Group.ε G ; x=fg = gsym ε-homo }
+     ; P⁻¹ = λ x imx → record { gelm = Group._⁻¹ G (gelm imx) ; x=fg = im00 (x=fg imx) }
+     ; P≈ = im01
+     ; P∙ = im02 } where
+         open IsImage
+         open Group H
+         open Gutil H
+         open IsGroupHomomorphism f-homo
+         open EqReasoning (Algebra.Group.setoid H)
+         GC = Group.Carrier G
+         im00 : {x : Carrier } {y : GC } → x ≈ f y  → x ⁻¹ ≈ f ((G Group.⁻¹) y )
+         im00 {x} {y} x=fy = begin
+            x ⁻¹ ≈⟨ ⁻¹-cong x=fy ⟩
+            (f y) ⁻¹ ≈⟨ gsym ( ⁻¹-homo _)  ⟩
+            f ((G Group.⁻¹) y ) ∎
+         im01 : {a b : Carrier} → a ≈ b → IsImage G H f-homo a → IsImage G H f-homo b
+         im01 {a} {b} a=b ima = record { gelm = _ ; x=fg = gtrans (gsym a=b) (x=fg ima) }
+         im02 :  {a b : Carrier} →
+            IsImage G H f-homo a →
+            IsImage G H f-homo b → IsImage G H f-homo (a ∙ b)
+         im02 {a} {b} isa isb = record { gelm = G < gelm isa ∙ gelm isb > ; x=fg = im03 } where
+              im03 : a ∙ b ≈ f (G < gelm isa ∙ gelm isb > )
+              im03 = begin
+                   a ∙ b ≈⟨ ∙-cong (x=fg isa) (x=fg isb)  ⟩ 
+                   f (gelm isa ) ∙ f (gelm isb ) ≈⟨ gsym (homo _ _ ) ⟩
+                   f (G < gelm isa ∙ gelm isb > ) ∎
+
+
 
 im : {c d : Level} (G  : Group c d) {H : Group c d} {f : Group.Carrier G → Group.Carrier H } 
    → (f-homo : IsGroupHomomorphism (GR G) (GR H) f ) 
@@ -358,7 +358,7 @@ FundamentalHomomorphismTheorm2 G {H} {f} f-homo = record {
                     ; ε-homo = ε-homo }
                    ; ⁻¹-homo = ⁻¹-homo  }
                ; injective = λ eq → AN.ab⁻¹∈N→a=b G (Ker G H f-homo) (h06 eq) }
-       ;  surjective = λ nx → (IsImage.gelm (Nelm.Pelm nx)) , h07 nx
+       ;  surjective = λ nx → (IsImage.gelm (Nelm.Pelm nx)) , h071 nx
    } where
     open GK G (Ker G H f-homo) 
     open Group H
@@ -367,8 +367,6 @@ FundamentalHomomorphismTheorm2 G {H} {f} f-homo = record {
     open EqReasoning (Algebra.Group.setoid H)
     open Nelm
     GC = Group.Carrier G 
-    h07 : (nx : Nelm H (Im G f-homo)) → f (IsImage.gelm (Nelm.Pelm nx)) ≈ elm nx
-    h07 nx = gsym ( IsImage.x=fg (Nelm.Pelm nx) )
     h06 : {x y : GC} → f x ≈ f y → f (G < x ∙ Group._⁻¹ G y >) ≈ ε 
     h06 {x} {y} fx=fy = begin
         f (G < x ∙ Group._⁻¹ G y >) ≈⟨ homo _ _  ⟩
@@ -393,6 +391,12 @@ FundamentalHomomorphismTheorm2 G {H} {f} f-homo = record {
            h (G < x ∙ (Group._⁻¹ G y ) > ) ∙ h y  ≈⟨ car kf ⟩ 
            ε ∙ h y  ≈⟨ proj₁ identity _ ⟩ 
            h y   ∎  
-
-
-
+    h07 : (nx : Nelm H (Im G f-homo)) → f (IsImage.gelm (Nelm.Pelm nx)) ≈ elm nx
+    h07 nx = gsym ( IsImage.x=fg (Nelm.Pelm nx) )
+    h071 : (nx : Nelm H (Im G f-homo)) → {z : Group.Carrier G} 
+       → (G / Ker G H f-homo) < z ≈  IsImage.gelm (Pelm nx) >
+       → f z ≈ elm nx
+    h071 nx {z} geq = begin
+        f z ≈⟨ h04 geq ⟩
+        f (IsImage.gelm (Pelm nx)) ≈⟨ gsym ( IsImage.x=fg (Nelm.Pelm nx) ) ⟩
+        elm nx ∎ 

@@ -1,3 +1,5 @@
+{-# OPTIONS  --safe #-}
+
 open import Level hiding ( suc ; zero )
 open import Algebra
 module sym4 where
@@ -56,10 +58,8 @@ solvable.end sym4solvable x d = solved1 x d where
    stage3FList = refl
 
    st3 = proj₁ (toList ( CommFListN 4 2 ))
-   -- st4 = {!!}
  
    solved1 :  (x : Permutation 4 4) → deriving 3 x → x =p= pid 
    solved1 x dr = CommSolved 4 x ( CommFListN 4 3 ) stage3FList p0id solved2 where
-      --    p0id :  FL→perm ((# 0) :: ((# 0) :: ((# 0 ) :: f0))) =p= pid
       solved2 : Any (perm→FL x ≡_) ( CommFListN 4 3 )
       solved2 = CommStage→ 4 3 x dr 

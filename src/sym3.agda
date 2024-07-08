@@ -1,3 +1,5 @@
+{-# OPTIONS --cubical-compatible --safe #-}
+
 open import Level hiding ( suc ; zero )
 open import Algebra
 module sym3 where
@@ -88,93 +90,68 @@ solvable.end sym3solvable x d = solved1 x d where
 
    open ≡-Reasoning
 
---   st01 : ( x y : Permutation 3 3) →   x =p= p3 →  y =p= p3 → x ∘ₚ  y =p= p4 
---   st01 x y s t = record { peq = λ q → ( begin
---         (x ∘ₚ y) ⟨$⟩ʳ q
---       ≡⟨ peq ( presp s t ) q ⟩
---          ( p3  ∘ₚ p3 ) ⟨$⟩ʳ q
---       ≡⟨ peq  p33=4 q  ⟩
---         p4 ⟨$⟩ʳ q
---       ∎ ) }
-
    st00 = perm→FL [ FL→perm ((suc zero) :: (suc zero :: (zero :: f0 ))) , FL→perm  ((suc (suc zero)) :: (suc zero) :: (zero :: f0))  ]
 
    st02 :  ( g h : Permutation 3 3) →  ([ g , h ] =p= pid) ∨ ([ g , h ] =p= p3) ∨ ([ g , h ] =p= p4)
-   st02 g h with perm→FL g | perm→FL h | inspect perm→FL g | inspect perm→FL h
-   ... | (zero :: (zero :: (zero :: f0))) | t | record { eq = ge } | te = case1 (ptrans (comm-resp {g} {h} {pid} (FL-inject ge ) prefl ) (idcomtl h) )
-   ... | s | (zero :: (zero :: (zero :: f0))) | se |  record { eq = he } = case1 (ptrans (comm-resp {g} {h} {_} {pid} prefl (FL-inject he ))(idcomtr g) )
-   ... | (zero :: (suc zero) :: (zero :: f0 )) |  (zero :: (suc zero) :: (zero :: f0 )) |  record { eq = ge } |  record { eq = he } =
+   st02 g h with perm→FL g in ge | perm→FL h in he 
+   ... | (zero :: (zero :: (zero :: f0))) | t = case1 (ptrans (comm-resp {g} {h} {pid} (FL-inject ge ) prefl ) (idcomtl h) )
+   ... | (zero :: (suc zero) :: (zero :: f0 )) |  (zero :: (suc zero) :: (zero :: f0 )) =
         case1 (ptrans (comm-resp (pFL g ge) (pFL h he)) (FL-inject refl) )
-   ... | (suc zero) :: (zero :: (zero :: f0 )) | (suc zero) :: (zero :: (zero :: f0 )) |  record { eq = ge } |  record { eq = he } = 
+   ... | (suc zero) :: (zero :: (zero :: f0 )) | (suc zero) :: (zero :: (zero :: f0 )) = 
         case1 (ptrans (comm-resp (pFL g ge) (pFL h he)) (FL-inject refl) )
-   ... | (suc zero) :: (suc zero :: (zero :: f0 )) |  (suc zero) :: (suc zero :: (zero :: f0 )) |  record { eq = ge } |  record { eq = he } = 
+   ... | (suc zero) :: (suc zero :: (zero :: f0 )) |  (suc zero) :: (suc zero :: (zero :: f0 )) = 
         case1 (ptrans (comm-resp (pFL g ge) (pFL h he)) (FL-inject refl) )
-   ... | (suc (suc zero)) :: (zero :: (zero :: f0 )) | (suc (suc zero)) :: (zero :: (zero :: f0 )) | record { eq = ge } |  record { eq = he } =
+   ... | (suc (suc zero)) :: (zero :: (zero :: f0 )) | (suc (suc zero)) :: (zero :: (zero :: f0 )) =
         case1 (ptrans (comm-resp (pFL g ge) (pFL h he)) (FL-inject refl) )
-   ... | (suc (suc zero)) :: (suc zero) :: (zero :: f0) | (suc (suc zero)) :: (suc zero) :: (zero :: f0) | record { eq = ge } |  record { eq = he } =
+   ... | (suc (suc zero)) :: (suc zero) :: (zero :: f0) | (suc (suc zero)) :: (suc zero) :: (zero :: f0) =
         case1 (ptrans (comm-resp (pFL g ge) (pFL h he)) (FL-inject refl) )
 
-   ... | (zero :: (suc zero) :: (zero :: f0 )) | ((suc zero) :: (zero :: (zero :: f0 ))) | record { eq = ge } |  record { eq = he } =
+   ... | (zero :: (suc zero) :: (zero :: f0 )) | ((suc zero) :: (zero :: (zero :: f0 ))) =
            case2 (case2 (ptrans (comm-resp (pFL g ge) (pFL h he)) (FL-inject refl) ))
-   ... | (zero :: (suc zero) :: (zero :: f0 )) | (suc zero) :: (suc zero :: (zero :: f0 )) | record { eq = ge } |  record { eq = he } = 
+   ... | (zero :: (suc zero) :: (zero :: f0 )) | (suc zero) :: (suc zero :: (zero :: f0 )) = 
            case2 (case2 (ptrans (comm-resp (pFL g ge) (pFL h he)) (FL-inject refl) ))
-   ... | (zero :: (suc zero) :: (zero :: f0 )) |  (suc (suc zero)) :: (zero :: (zero :: f0 ))| record { eq = ge } |  record { eq = he } =  
+   ... | (zero :: (suc zero) :: (zero :: f0 )) |  (suc (suc zero)) :: (zero :: (zero :: f0 ))=  
            case2 (case1 (ptrans (comm-resp (pFL g ge) (pFL h he)) (FL-inject refl) ))
-   ... | (zero :: (suc zero) :: (zero :: f0 )) | ((suc (suc zero)) :: (suc zero) :: (zero :: f0))| record { eq = ge } |  record { eq = he } =   
+   ... | (zero :: (suc zero) :: (zero :: f0 )) | ((suc (suc zero)) :: (suc zero) :: (zero :: f0))=   
            case2 (case1 (ptrans (comm-resp (pFL g ge) (pFL h he)) (FL-inject refl) ))
-   ... | ((suc zero) :: (zero :: (zero :: f0 ))) | (zero :: (suc zero) :: (zero :: f0 )) | record { eq = ge } |  record { eq = he } = 
+   ... | ((suc zero) :: (zero :: (zero :: f0 ))) | (zero :: (suc zero) :: (zero :: f0 )) = 
           case2 (case1 (ptrans (comm-resp (pFL g ge) (pFL h he)) (FL-inject refl) ))
-   ... | ((suc zero) :: (zero :: (zero :: f0 ))) | (suc zero) :: (suc zero :: (zero :: f0 )) | record { eq = ge } |  record { eq = he } = 
+   ... | ((suc zero) :: (zero :: (zero :: f0 ))) | (suc zero) :: (suc zero :: (zero :: f0 )) = 
             case2 (case2 (ptrans (comm-resp (pFL g ge) (pFL h he)) (FL-inject refl) ))
-   ... | ((suc zero) :: (zero :: (zero :: f0 ))) | ((suc (suc zero)) :: (zero :: (zero :: f0 )))| record { eq = ge } |  record { eq = he } =  
+   ... | ((suc zero) :: (zero :: (zero :: f0 ))) | ((suc (suc zero)) :: (zero :: (zero :: f0 )))=  
             case2 (case1 (ptrans (comm-resp (pFL g ge) (pFL h he)) (FL-inject refl) ))
-   ... | ((suc zero) :: (zero :: (zero :: f0 ))) |  (suc (suc zero)) :: (suc zero) :: (zero :: f0) | record { eq = ge } |  record { eq = he } =  
+   ... | ((suc zero) :: (zero :: (zero :: f0 ))) |  (suc (suc zero)) :: (suc zero) :: (zero :: f0) =  
             case2 (case2 (ptrans (comm-resp (pFL g ge) (pFL h he)) (FL-inject refl) ))
-   ... | (suc zero) :: (suc zero :: (zero :: f0 )) |  (zero :: (suc zero) :: (zero :: f0 )) | record { eq = ge } |  record { eq = he } =  
+   ... | (suc zero) :: (suc zero :: (zero :: f0 )) |  (zero :: (suc zero) :: (zero :: f0 )) =  
             case2 (case1 (ptrans (comm-resp (pFL g ge) (pFL h he)) (FL-inject refl) ))
-   ... | (suc zero) :: (suc zero :: (zero :: f0 )) |  ((suc zero) :: (zero :: (zero :: f0 ))) | record { eq = ge } |  record { eq = he } =  
+   ... | (suc zero) :: (suc zero :: (zero :: f0 )) |  ((suc zero) :: (zero :: (zero :: f0 ))) =  
             case2 (case1 (ptrans (comm-resp (pFL g ge) (pFL h he)) (FL-inject refl) ))
-   ... | (suc zero) :: (suc zero :: (zero :: f0 )) |  ((suc (suc zero)) :: (zero :: (zero :: f0 ))) | record { eq = ge } |  record { eq = he } =  
+   ... | (suc zero) :: (suc zero :: (zero :: f0 )) |  ((suc (suc zero)) :: (zero :: (zero :: f0 ))) =  
          case1 (ptrans (comm-resp (pFL g ge) (pFL h he)) (FL-inject refl) )
-   ... | (suc zero) :: (suc zero :: (zero :: f0 )) |  ((suc (suc zero)) :: (suc zero) :: (zero :: f0)) | record { eq = ge } |  record { eq = he } =   
+   ... | (suc zero) :: (suc zero :: (zero :: f0 )) |  ((suc (suc zero)) :: (suc zero) :: (zero :: f0)) =   
             case2 (case1 (ptrans (comm-resp (pFL g ge) (pFL h he)) (FL-inject refl) ))
-   ... | (suc (suc zero)) :: (zero :: (zero :: f0 )) | ((zero :: (suc zero) :: (zero :: f0 )) ) | record { eq = ge } |  record { eq = he } =
+   ... | (suc (suc zero)) :: (zero :: (zero :: f0 )) | ((zero :: (suc zero) :: (zero :: f0 )) ) =
           case2 (case2 (ptrans (comm-resp (pFL g ge) (pFL h he)) (FL-inject refl) ))
-   ... | (suc (suc zero)) :: (zero :: (zero :: f0 )) | ((suc zero) :: (zero :: (zero :: f0 ))) | record { eq = ge } |  record { eq = he } =
+   ... | (suc (suc zero)) :: (zero :: (zero :: f0 )) | ((suc zero) :: (zero :: (zero :: f0 ))) =
           case2 (case2 (ptrans (comm-resp (pFL g ge) (pFL h he)) (FL-inject refl) ))
-   ... | (suc (suc zero)) :: (zero :: (zero :: f0 )) | ((suc zero) :: (suc zero :: (zero :: f0 ))) | record { eq = ge } |  record { eq = he } =
+   ... | (suc (suc zero)) :: (zero :: (zero :: f0 )) | ((suc zero) :: (suc zero :: (zero :: f0 ))) =
           case1 (ptrans (comm-resp (pFL g ge) (pFL h he)) (FL-inject refl) )
-   ... | (suc (suc zero)) :: (zero :: (zero :: f0 )) | ((suc (suc zero)) :: (suc zero) :: (zero :: f0)) | record { eq = ge } |  record { eq = he } = 
+   ... | (suc (suc zero)) :: (zero :: (zero :: f0 )) | ((suc (suc zero)) :: (suc zero) :: (zero :: f0)) = 
           case2 (case2 (ptrans (comm-resp (pFL g ge) (pFL h he)) (FL-inject refl) ))
-   ... |  ((suc (suc zero)) :: (suc zero) :: (zero :: f0)) | ((zero :: (suc zero) :: (zero :: f0 )) ) | record { eq = ge } |  record { eq = he } =
+   ... |  ((suc (suc zero)) :: (suc zero) :: (zero :: f0)) | ((zero :: (suc zero) :: (zero :: f0 )) ) =
           case2 (case2 (ptrans (comm-resp (pFL g ge) (pFL h he)) (FL-inject refl) ))
-   ... |  ((suc (suc zero)) :: (suc zero) :: (zero :: f0)) | ((suc zero) :: (zero :: (zero :: f0 ))) | record { eq = ge } |  record { eq = he } =
+   ... |  ((suc (suc zero)) :: (suc zero) :: (zero :: f0)) | ((suc zero) :: (zero :: (zero :: f0 ))) =
           case2 (case1 (ptrans (comm-resp (pFL g ge) (pFL h he)) (FL-inject refl) ))
-   ... |  ((suc (suc zero)) :: (suc zero) :: (zero :: f0)) | ((suc zero) :: (suc zero :: (zero :: f0 )))  | record { eq = ge } |  record { eq = he } =
+   ... |  ((suc (suc zero)) :: (suc zero) :: (zero :: f0)) | ((suc zero) :: (suc zero :: (zero :: f0 )))  =
           case2 (case2 (ptrans (comm-resp (pFL g ge) (pFL h he)) (FL-inject refl) ))
-   ... |  ((suc (suc zero)) :: (suc zero) :: (zero :: f0)) | (suc (suc zero)) :: (zero :: (zero :: f0 ))  | record { eq = ge } |  record { eq = he } =
+   ... |  ((suc (suc zero)) :: (suc zero) :: (zero :: f0)) | (suc (suc zero)) :: (zero :: (zero :: f0 ))  =
           case2 (case1 (ptrans (comm-resp (pFL g ge) (pFL h he)) (FL-inject refl) ))
    
    stage12  :  (x : Permutation 3 3) → stage1 x →  ( x =p= pid ) ∨ ( x =p= p3 ) ∨ ( x =p= p4 )
-   stage12 x (comm {g} {h} x1 y1 ) = st02 g h
-   stage12 _ (ccong {y} x=y sx) with stage12 y sx
-   ... | case1 id = case1 ( ptrans (psym x=y ) id )
-   ... | case2 (case1 x₁) = case2 (case1 ( ptrans (psym x=y ) x₁ ))
-   ... | case2 (case2 x₁) = case2 (case2 ( ptrans (psym x=y ) x₁ ))
-
+   stage12 x (comm {g} {h} x1 y1 eq ) = st02 g h
 
    solved1 :  (x : Permutation 3 3) →  Commutator (λ x₁ → Commutator (λ x₂ → Lift (Level.suc Level.zero) ⊤) x₁) x → x =p= pid
-   solved1 x (ccong {f} {g} (record {peq = f=g}) d) with solved1 f d
-   ... | record { peq = f=e }  =  record  { peq = λ q → cc q } where
-      cc : ( q : Fin 3 ) → x ⟨$⟩ʳ q ≡ q
-      cc q = begin
-             x ⟨$⟩ʳ q
-          ≡⟨ sym (f=g q) ⟩
-             f ⟨$⟩ʳ q
-          ≡⟨ f=e q ⟩
-             q
-          ∎ 
-   solved1 _ (comm {g} {h} x y) with stage12 g x | stage12 h y
+   solved1 _ (comm {g} {h} x y eq) with stage12 g x | stage12 h y
    ... | case1 t | case1 s = ptrans (comm-resp t s) (comm-refl {pid} prefl)
    ... | case1 t | case2 s = ptrans (comm-resp {g} {h} {pid} t prefl) (idcomtl h)
    ... | case2 t | case1 s = ptrans (comm-resp {g} {h} {_} {pid} prefl s) (idcomtr g)

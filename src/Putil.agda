@@ -1,11 +1,11 @@
-{-# OPTIONS --allow-unsolved-metas #-} 
+{-# OPTIONS --cubical-compatible --safe #-}
 module Putil where
 
 open import Level hiding ( suc ; zero )
 open import Algebra
 open import Algebra.Structures
 open import Data.Fin hiding ( _<_  ; _≤_ ; _-_ ; _+_ ; _≟_)
-open import Data.Fin.Properties hiding ( <-trans ; ≤-trans ; ≤-irrelevant ; _≟_ ) renaming ( <-cmp to <-fcmp )
+open import Data.Fin.Properties as DFP hiding ( <-trans ; ≤-trans ; ≤-irrelevant ; _≟_ ) renaming ( <-cmp to <-fcmp )
 open import Data.Fin.Permutation
 open import Function hiding (id ; flip)
 open import Function.Inverse as Inverse using (_↔_; Inverse; _InverseOf_)
@@ -16,10 +16,7 @@ open import Data.Nat.Properties -- using (<-trans)
 open import Relation.Binary.PropositionalEquality hiding ( [_] )
 open import Data.List using (List; []; _∷_ ; length ; _++_ ; head ; tail ) renaming (reverse to rev )
 open import nat
-
 open import Symmetric
-
-
 open import Relation.Nullary
 open import Data.Empty
 open import  Relation.Binary.Core
@@ -29,7 +26,7 @@ open import fin
 -- An inductive construction of permutation
 
 pprep  : {n : ℕ }  → Permutation n n → Permutation (suc n) (suc n)
-pprep {n} perm =  permutation p→ p← record { left-inverse-of = piso→ ; right-inverse-of = piso← } where
+pprep {n} perm =  permutation p→ p← piso←  piso→ where
    p→ : Fin (suc n) → Fin (suc n)
    p→ zero = zero
    p→ (suc x) = suc ( perm  ⟨$⟩ʳ x)
@@ -47,7 +44,7 @@ pprep {n} perm =  permutation p→ p← record { left-inverse-of = piso→ ; rig
    piso→ (suc x) = cong (λ k → suc k ) (inverseˡ perm) 
 
 pswap  : {n : ℕ }  → Permutation n n → Permutation (suc (suc n)) (suc (suc  n ))
-pswap {n} perm = permutation p→ p← record { left-inverse-of = piso→ ; right-inverse-of = piso← } where
+pswap {n} perm = permutation p→ p← piso←  piso→ where
    p→ : Fin (suc (suc n)) → Fin (suc (suc n)) 
    p→ zero = suc zero 
    p→ (suc zero) = zero 
@@ -76,7 +73,7 @@ pfill : { n m : ℕ } → m ≤ n → Permutation  m m → Permutation n n
 pfill {n} {m} m≤n perm = pfill1 (n - m) (n-m<n n m ) (subst (λ k → Permutation k k ) (n-n-m=m m≤n ) perm) where
    pfill1 : (i : ℕ ) → i ≤ n  → Permutation (n - i) (n - i)  →  Permutation n n
    pfill1 0 _ perm = perm
-   pfill1 (suc i) i<n perm = pfill1 i (≤to< i<n) (subst (λ k → Permutation k k ) (si-sn=i-n i<n ) ( pprep perm ) )
+   pfill1 (suc i) i<n perm = pfill1 i (<to≤ i<n) (subst (λ k → Permutation k k ) (si-sn=i-n i<n ) ( pprep perm ) )
 
 --
 --  psawpim (inseert swap at position m )
@@ -122,16 +119,16 @@ plist {suc n} perm = rev (plist1 perm n a<sa)
 --     pins1 zero _ _ = pid
 --     pins1 (suc i) (suc j) (s≤s si≤n) = psawpim {suc (suc (suc n))} {j}  (s≤s (s≤s si≤n))  ∘ₚ  pins1 i j (≤-trans si≤n a≤sa ) 
 
-open import Relation.Binary.HeterogeneousEquality as HE using (_≅_ )
-open ≡-Reasoning
+-- open import Relation.Binary.HeterogeneousEquality as HE using (_≅_ )
+-- open ≡-Reasoning
 
 pins  : {n m : ℕ} → m ≤ n → Permutation (suc n) (suc n)
 pins {_} {zero} _ = pid
-pins {suc n} {suc m} (s≤s  m≤n) = permutation p← p→  record { left-inverse-of = piso← ; right-inverse-of = piso→ } where
+pins {suc n} {suc m} (s≤s  m≤n) = permutation p← p→ piso→   piso← where
 
    next : Fin (suc (suc n)) → Fin (suc (suc n))
    next zero = suc zero
-   next (suc x) = fromℕ< (≤-trans (fin<n {_} {x} ) a≤sa )
+   next (suc x) = fromℕ< (≤-trans (fin<n {_} x ) a≤sa )
 
    p→ : Fin (suc (suc n)) → Fin (suc (suc n)) 
    p→ x with <-cmp (toℕ x) (suc m)
@@ -142,22 +139,22 @@ pins {suc n} {suc m} (s≤s  m≤n) = permutation p← p→  record { left-inver
    p← : Fin (suc (suc n)) → Fin (suc (suc n)) 
    p← zero = fromℕ< (s≤s (s≤s m≤n))
    p← (suc x) with <-cmp (toℕ x) (suc m)
-   ... | tri< a ¬b ¬c = fromℕ< (≤-trans (fin<n {_} {x}) a≤sa )
+   ... | tri< a ¬b ¬c = fromℕ< (≤-trans (fin<n {_} x) a≤sa )
    ... | tri≈ ¬a b ¬c = suc x
    ... | tri> ¬a ¬b c = suc x
 
    mm : toℕ (fromℕ< {suc m} {suc (suc n)} (s≤s (s≤s m≤n))) ≡ suc m 
    mm = toℕ-fromℕ< (s≤s (s≤s  m≤n)) 
 
-   mma : (x : Fin (suc n) ) → suc (toℕ x) ≤ suc m → toℕ ( fromℕ< (≤-trans (fin<n {_} {x}) a≤sa ) ) ≤ m
-   mma x (s≤s x<sm) = subst (λ k → k ≤ m) (sym (toℕ-fromℕ< (≤-trans fin<n a≤sa ) )) x<sm
+   mma : (x : Fin (suc n) ) → suc (toℕ x) ≤ suc m → toℕ ( fromℕ< (≤-trans (fin<n {_} x) a≤sa ) ) ≤ m
+   mma x (s≤s x<sm) = subst (λ k → k ≤ m) (sym (toℕ-fromℕ< (≤-trans (fin<n _ ) a≤sa ) )) x<sm
    
-   p3 : (x : Fin (suc n) ) →  toℕ (fromℕ< (≤-trans (fin<n {_} {suc x} ) (s≤s a≤sa))) ≡ suc (toℕ x)
+   p3 : (x : Fin (suc n) ) →  toℕ (fromℕ< (≤-trans (fin<n {_} (suc x) ) (s≤s a≤sa))) ≡ suc (toℕ x)
    p3 x = begin
-            toℕ (fromℕ< (≤-trans (fin<n {_} {suc x} ) (s≤s a≤sa)))
-          ≡⟨ toℕ-fromℕ< ( s≤s ( ≤-trans fin<n  a≤sa ) ) ⟩
+            toℕ (fromℕ< (≤-trans (fin<n {_} (suc x) ) (s≤s a≤sa)))
+          ≡⟨ toℕ-fromℕ< ( s≤s ( ≤-trans (fin<n _) a≤sa ) ) ⟩
             suc (toℕ x)
-          ∎ 
+          ∎ where open ≡-Reasoning
 
    piso→ : (x : Fin (suc (suc n)) ) → p← ( p→ x ) ≡ x
    piso→ zero with <-cmp (toℕ (fromℕ< (≤-trans (s≤s z≤n) (s≤s (s≤s  m≤n) )))) (suc m)
@@ -190,18 +187,18 @@ pins {suc n} {suc m} (s≤s  m≤n) = permutation p← p→  record { left-inver
                toℕ (fromℕ< (≤-trans a (s≤s m≤n)))
              ≡⟨ toℕ-fromℕ< {suc (toℕ x)} {suc n} (≤-trans a (s≤s m≤n)) ⟩
                suc (toℕ x)
-             ∎
+              ∎ where open ≡-Reasoning
           p15 : p← (suc y) ≡ suc x
           p15 with <-cmp (toℕ y) (suc m) -- eq : suc y ≡ suc (suc (fromℕ< (≤-pred (≤-trans a (s≤s m≤n))))) ,  a : suc x < suc m
           ... | tri< a₁ ¬b ¬c = p11 where
-            p11 : fromℕ< (≤-trans (fin<n {_} {y}) a≤sa ) ≡ suc x
+            p11 : fromℕ< (≤-trans (fin<n {_} y) a≤sa ) ≡ suc x
             p11 = begin
-               fromℕ< (≤-trans (fin<n {_} {y}) a≤sa )
-              ≡⟨ lemma10 {suc (suc n)} {_} {_} p12 {≤-trans (fin<n {_} {y}) a≤sa} {s≤s (fin<n {suc n} {x} )}  ⟩
-               suc (fromℕ< (fin<n {suc n} {x} )) 
+               fromℕ< (≤-trans (fin<n {_} y) a≤sa )
+              ≡⟨ lemma10 {suc (suc n)} {_} {_} p12 {≤-trans (fin<n {_} y) a≤sa} {s≤s (fin<n {suc n} x )}  ⟩
+               suc (fromℕ< (fin<n {suc n} x )) 
               ≡⟨ cong suc (fromℕ<-toℕ x _ ) ⟩
                suc x
-              ∎
+              ∎ where open ≡-Reasoning
           ... | tri≈ ¬a b ¬c = ⊥-elim ( nat-≡< b (subst (λ k → k < suc m) (sym p12) a ))  --  suc x < suc m -> y = suc x  → toℕ y < suc m 
           ... | tri> ¬a ¬b c = ⊥-elim ( nat-<> c (subst (λ k → k < suc m) (sym p12) a ))  
 
@@ -219,13 +216,13 @@ pins {suc n} {suc m} (s≤s  m≤n) = permutation p← p→  record { left-inver
    ... | tri< a ¬b ¬c₁ = ⊥-elim (  nat-≡< b (<-trans a<sa a) ) 
    ... | tri≈ ¬a₁ refl ¬c₁ = ⊥-elim ( nat-≡< b a<sa )
    ... | tri> ¬a₁ ¬b c = refl
-   piso← (suc x) | tri< a ¬b ¬c with <-cmp (toℕ ( fromℕ< (≤-trans (fin<n {_} {x}) a≤sa ) )) (suc m)
+   piso← (suc x) | tri< a ¬b ¬c with <-cmp (toℕ ( fromℕ< (≤-trans (fin<n {_} x) a≤sa ) )) (suc m)
    ... | tri≈ ¬a b ¬c₁ = ⊥-elim ( ¬a (s≤s (mma x a)))
    ... | tri> ¬a ¬b₁ c = ⊥-elim ( ¬a (s≤s (mma x a)))
    ... | tri< a₁ ¬b₁ ¬c₁ = p0 where
        p2 : suc (suc (toℕ x)) ≤ suc (suc n)
-       p2 = s≤s (fin<n {suc n} {x})
-       p6 : suc (toℕ (fromℕ< (≤-trans (fin<n {_} {suc x}) (s≤s a≤sa)))) ≤ suc (suc n)
+       p2 = s≤s (fin<n {suc n} x)
+       p6 : suc (toℕ (fromℕ< (≤-trans (fin<n {_} (suc x)) (s≤s a≤sa)))) ≤ suc (suc n)
        p6 = s≤s (≤-trans a₁ (s≤s m≤n))
        p0 : fromℕ< (≤-trans (s≤s  a₁) (s≤s (s≤s  m≤n) ))  ≡ suc x
        p0 = begin
@@ -233,12 +230,12 @@ pins {suc n} {suc m} (s≤s  m≤n) = permutation p← p→  record { left-inver
           ≡⟨⟩
              fromℕ< (s≤s (≤-trans a₁ (s≤s m≤n))) 
           ≡⟨ lemma10 {suc (suc n)} (p3 x) {p6} {p2} ⟩
-             fromℕ< ( s≤s (fin<n {suc n} {x}) )
+             fromℕ< ( s≤s (fin<n {suc n} x) )
           ≡⟨⟩
-             suc (fromℕ< (fin<n {suc n} {x} )) 
+             suc (fromℕ< (fin<n {suc n} x )) 
           ≡⟨ cong suc (fromℕ<-toℕ x _ ) ⟩
              suc x
-          ∎ 
+          ∎ where open ≡-Reasoning
 
 t7 =  plist (pins {3} (n≤ 3)) ∷ plist (flip ( pins {3} (n≤ 3) )) ∷  plist ( pins {3} (n≤ 3)  ∘ₚ  flip ( pins {3} (n≤ 3))) ∷ []
 -- t8 =  {!!}
@@ -256,35 +253,65 @@ perm1 {p} {q} = ⟪ perm01 _ _ , perm00 _ _ ⟫ where
    perm00 x y with p ⟨$⟩ˡ x
    perm00 zero zero | zero = refl
 
+pred-fin : {n : ℕ } → (y : Fin (suc n)) → 0 < toℕ y → (y<n : Data.Nat.pred (toℕ y) < n) → suc (fromℕ< y<n) ≡ y 
+pred-fin {.(suc _)} zero () (s≤s z≤n)
+pred-fin {suc n} (suc zero) 0<y (s≤s z≤n) = refl
+pred-fin {suc n} (suc (suc y)) 0<y y<n = p13 where
+  p14 : toℕ (suc y) < suc n
+  p14 = y<n
+  sy<n : Data.Nat.pred (toℕ (suc y)) < n
+  sy<n = px≤py ( begin 
+     suc (suc (toℕ y))  ≡⟨ refl ⟩
+     suc (toℕ (suc y))  ≤⟨ p14 ⟩
+     suc n  ∎ ) where open ≤-Reasoning 
+  p12 : suc (fromℕ< sy<n ) ≡ suc y 
+  p12 = pred-fin (suc y) (s≤s z≤n) sy<n
+  p16 : fromℕ< y<n ≡ suc (fromℕ< sy<n)
+  p16 = lemma10 refl 
+  p13 : suc (fromℕ< y<n) ≡ suc (suc y)
+  p13 = cong suc (trans p16 p12  )
 
 ----
 --  find insertion point of pins
 ----
+
+p011 : (n m : ℕ) → (perm : Permutation (suc n) (suc n) ) → (m≤n : m ≤ n) → 0 < m → (perm ∘ₚ flip (pins m≤n )) ⟨$⟩ˡ (# 0) ≡ perm ⟨$⟩ˡ (fromℕ< (s≤s m≤n))
+p011 zero zero perm z≤n _ = refl
+p011 zero (suc t) perm () _
+p011 (suc n) (suc m) perm (s≤s m≤n) _ with <-cmp (toℕ {suc (suc n)} (# 0)) (suc m)
+... | tri< a ¬b ¬c = refl
+... | tri≈ ¬a () ¬c
+... | tri> ¬a ¬b ()
+p011 (suc n) zero perm m≤n ()
+
 p=0 : {n : ℕ }  → (perm : Permutation (suc n) (suc n) ) → ((perm ∘ₚ flip (pins (toℕ≤pred[n] (perm ⟨$⟩ʳ (# 0))))) ⟨$⟩ˡ (# 0)) ≡ # 0
 p=0 {zero} perm with ((perm ∘ₚ flip (pins (toℕ≤pred[n] (perm ⟨$⟩ʳ (# 0))))) ⟨$⟩ˡ (# 0)) 
 ... | zero = refl
-p=0 {suc n} perm with perm ⟨$⟩ʳ (# 0) | inspect (_⟨$⟩ʳ_ perm ) (# 0)| toℕ≤pred[n] (perm ⟨$⟩ʳ (# 0)) | inspect toℕ≤pred[n] (perm ⟨$⟩ʳ (# 0))
-... | zero |  record { eq = e} |  m<n | _ = p001 where
-   p001 : perm ⟨$⟩ˡ ( pins m<n ⟨$⟩ʳ zero) ≡ zero
-   p001 = subst (λ k → perm ⟨$⟩ˡ k ≡ zero ) e (inverseˡ perm)
-... | suc t |  record { eq = e } | m<n | record { eq = e1 }  = p002 where   -- m<n  : suc (toℕ t) ≤ suc n
-   p002 : perm ⟨$⟩ˡ ( pins m<n ⟨$⟩ʳ zero) ≡ zero
-   p002 = p005 zero (toℕ t)  refl m<n refl where   -- suc (toℕ t) ≤ suc n
-      p003 : (s : Fin (suc (suc n))) → s ≡ (perm ⟨$⟩ʳ (# 0)) → perm ⟨$⟩ˡ s  ≡ # 0
-      p003 s eq = subst (λ k → perm ⟨$⟩ˡ k ≡ zero ) (sym eq) (inverseˡ perm)
-      p005 : (x :  Fin (suc (suc n))) → (m : ℕ ) → x ≡ zero → (m≤n : suc m ≤ suc n ) → m ≡ toℕ t → perm ⟨$⟩ˡ ( pins m≤n ⟨$⟩ʳ zero) ≡ zero
-      p005 zero m eq (s≤s m≤n) meq = p004 where
-          p004 :  perm ⟨$⟩ˡ (fromℕ< (s≤s (s≤s m≤n))) ≡ zero
-          p004 = p003  (fromℕ< (s≤s (s≤s m≤n))) (
-             begin
-                fromℕ< (s≤s (s≤s m≤n))
-             ≡⟨  lemma10 {suc (suc n)}  (cong suc meq) {s≤s (s≤s m≤n)} {subst (λ k →  suc k < suc (suc n)) meq (s≤s (s≤s m≤n)) } ⟩
-                fromℕ< (subst (λ k →  suc k < suc (suc n)) meq (s≤s (s≤s m≤n)) )
-             ≡⟨ fromℕ<-toℕ {suc (suc n)} (suc t) (subst (λ k →  suc k < suc (suc n)) meq (s≤s (s≤s m≤n)) ) ⟩
-                suc t
-             ≡⟨ sym e ⟩
-                (perm ⟨$⟩ʳ (# 0))
-             ∎ )
+p=0 {suc n} perm with Inverse.to perm zero in eq
+... | zero = p002 where
+    p002 : Inverse.from perm (Inverse.to (pins (toℕ≤pred[n] zero)) zero) ≡ zero
+    p002 = subst (λ k → perm ⟨$⟩ˡ k ≡ zero ) eq (inverseˡ perm)
+... | suc t = p012 where
+    p003 : 0 < toℕ (Inverse.to perm zero)
+    p003 = subst ( λ k → 0 < k ) (cong toℕ (sym eq)) (s≤s z≤n)
+    p008 : toℕ (Data.Fin.pred (Inverse.to perm zero)) ≡ toℕ (Inverse.to perm zero) ∸ 1
+    p008 = fpred-comm (Inverse.to perm zero)
+    p002 : toℕ (Inverse.to perm zero) ≤ suc n
+    p002 = toℕ≤pred[n] (Inverse.to perm zero)
+    p007 : Data.Nat.pred (toℕ (Inverse.to perm zero)) < suc n
+    p007 = subst (λ k → k < suc n ) p008 (<-transˡ (pred< _ (λ ne → DFP.<⇒≢ p003 (sym ne))) p002)
+    p012 : Inverse.from perm (Inverse.to (pins (toℕ≤pred[n] (suc t))) zero) ≡ # 0 
+    p012 = begin
+        Inverse.from perm (Inverse.to (pins (toℕ≤pred[n] (suc t))) zero) ≡⟨ p011 _ _ perm (toℕ≤pred[n] (suc t)) (s≤s z≤n) ⟩
+        perm ⟨$⟩ˡ suc (fromℕ< (s≤s (toℕ≤pred[n] t))) ≡⟨ cong (λ k → perm ⟨$⟩ˡ k ) (lemma10 (
+           begin
+           suc (toℕ t) ≡⟨ refl ⟩
+           suc (toℕ (suc t) ∸ 1) ≡⟨ cong (λ k → suc (toℕ k ∸ 1) ) (sym eq) ⟩
+           suc (toℕ (Inverse.to perm zero) ∸ 1) ∎ )) ⟩
+        perm ⟨$⟩ˡ suc (fromℕ< p007) ≡⟨ cong (λ k → perm ⟨$⟩ˡ k ) (pred-fin (Inverse.to perm zero) p003 p007 ) ⟩
+        perm ⟨$⟩ˡ (Inverse.to perm zero) ≡⟨ inverseˡ perm  ⟩
+        # 0 ∎ where 
+            open ≡-Reasoning
 
 ----
 --  other elements are preserved in pins
@@ -337,7 +364,7 @@ pleq  : {n  : ℕ} → (x y : Permutation n n ) → plist0 x ≡ plist0 y → x 
 pleq  {0} x y refl = record { peq = λ q → pleq0 q } where
   pleq0 : (q : Fin 0 ) → (x ⟨$⟩ʳ q) ≡ (y ⟨$⟩ʳ q)
   pleq0 ()
-pleq  {suc n} x y eq = record { peq = λ q → pleq1 n a<sa eq q fin<n } where
+pleq  {suc n} x y eq = record { peq = λ q → pleq1 n a<sa eq q (fin<n _) } where
   pleq1 : (i : ℕ ) → (i<sn : i < suc n ) →  plist2 x i i<sn ≡ plist2 y i i<sn → (q : Fin (suc n)) → toℕ q < suc i → x ⟨$⟩ʳ q ≡ y ⟨$⟩ʳ q
   pleq1 zero i<sn eq q q<i with  <-cmp (toℕ q) zero
   ... | tri< () ¬b ¬c
@@ -350,7 +377,7 @@ pleq  {suc n} x y eq = record { peq = λ q → pleq1 n a<sa eq q fin<n } where
           y ⟨$⟩ʳ zero
        ≡⟨ cong ( λ k → y ⟨$⟩ʳ k ) (sym (toℕ-injective b )) ⟩
           y ⟨$⟩ʳ q
-       ∎ 
+       ∎ where open ≡-Reasoning 
   pleq1 (suc i) (s≤s i<sn) eq q q<i with <-cmp (toℕ q) (suc i)
   ... | tri< a ¬b ¬c = pleq1 i (<-trans i<sn a<sa ) (taileq eq) q a
   ... | tri> ¬a ¬b c = ⊥-elim (nat-≤> c q<i )
@@ -363,6 +390,7 @@ pleq  {suc n} x y eq = record { peq = λ q → pleq1 n a<sa eq q fin<n } where
        ≡⟨ cong (λ k → y ⟨$⟩ʳ k) (sym (pleq3 b)) ⟩
             y ⟨$⟩ʳ q
        ∎ where
+          open ≡-Reasoning 
           pleq3 : toℕ q ≡ suc i → q ≡ suc (fromℕ< i<sn)
           pleq3 tq=si = toℕ-injective ( begin
                   toℕ  q
@@ -375,6 +403,21 @@ pleq  {suc n} x y eq = record { peq = λ q → pleq1 n a<sa eq q fin<n } where
                ∎ ) 
           pleq2 : toℕ ( x ⟨$⟩ʳ (suc (fromℕ< i<sn)) ) ≡ toℕ ( y ⟨$⟩ʳ (suc (fromℕ< i<sn)) )
           pleq2 = headeq eq
+
+ℕL-inject : {h h1 : ℕ } {x y : List ℕ } → h ∷ x ≡ h1 ∷ y → h ≡ h1
+ℕL-inject refl = refl
+
+ℕL-inject-t : {h h1 : ℕ } {x y : List ℕ } → h ∷ x ≡ h1 ∷ y → x ≡ y
+ℕL-inject-t refl = refl
+                    
+ℕL-eq? : (x y : List ℕ ) → Dec (x ≡ y )  
+ℕL-eq? [] [] = yes refl                             
+ℕL-eq? [] (x ∷ y) = no (λ ())          
+ℕL-eq? (x ∷ x₁) [] = no (λ ())                 
+ℕL-eq? (h ∷ x) (h1 ∷ y) with h ≟ h1 | ℕL-eq? x y                               
+... | yes y1 | yes y2 = yes ( cong₂ (λ j k → j ∷ k ) y1 y2 )              
+... | yes y1 | no n = no (λ e → n (ℕL-inject-t e))                          
+... | no n  | t = no (λ e → n (ℕL-inject e))                              
 
 is-=p= : {n  : ℕ} → (x y : Permutation n n ) → Dec (x =p= y )
 is-=p= {zero} x y = yes record { peq = λ () }
@@ -394,7 +437,8 @@ pprep-cong {n} {x} {y} x=y = record { peq = pprep-cong1 } where
           suc ( y ⟨$⟩ʳ q )
         ≡⟨⟩
           pprep y ⟨$⟩ʳ suc q
-        ∎  
+        ∎  where
+          open ≡-Reasoning 
 
 pprep-dist : {n  : ℕ} → {x y : Permutation n n } → pprep (x ∘ₚ y) =p= (pprep x ∘ₚ pprep y)
 pprep-dist {n} {x} {y} = record { peq = pprep-dist1 } where
@@ -415,7 +459,8 @@ pswap-cong {n} {x} {y} x=y = record { peq = pswap-cong1 } where
           suc (suc (y ⟨$⟩ʳ q))
         ≡⟨⟩
           pswap y ⟨$⟩ʳ suc (suc q)
-        ∎  
+        ∎  where
+          open ≡-Reasoning 
  
 pswap-dist : {n  : ℕ} → {x y : Permutation n n } → pprep (pprep (x ∘ₚ y)) =p= (pswap x ∘ₚ pswap y)
 pswap-dist {n} {x} {y} = record { peq = pswap-dist1 } where
@@ -431,7 +476,8 @@ shlem→ perm p0=0 x px=0 = begin
           perm ⟨$⟩ʳ zero                     ≡⟨ cong (λ k →  perm ⟨$⟩ʳ k ) (sym p0=0) ⟩
           perm ⟨$⟩ʳ ( perm ⟨$⟩ˡ zero)        ≡⟨ inverseʳ perm  ⟩
           zero
-       ∎ 
+       ∎ where
+          open ≡-Reasoning 
 
 shlem← : {n  : ℕ} → (perm : Permutation (suc n) (suc n) ) → (p0=0 : perm ⟨$⟩ˡ (# 0) ≡ # 0 ) → (x : Fin (suc n)) → perm ⟨$⟩ʳ x ≡ zero → x ≡ zero
 shlem← perm p0=0 x px=0 =  begin
@@ -439,7 +485,8 @@ shlem← perm p0=0 x px=0 =  begin
           perm ⟨$⟩ˡ ( perm ⟨$⟩ʳ x )          ≡⟨ cong (λ k →  perm ⟨$⟩ˡ k ) px=0 ⟩
           perm ⟨$⟩ˡ zero                     ≡⟨ p0=0  ⟩
           zero
-       ∎ 
+       ∎ where
+          open ≡-Reasoning 
 
 sh2 : {n  : ℕ} → (perm : Permutation (suc n) (suc n) ) → (p0=0 : perm ⟨$⟩ˡ (# 0) ≡ # 0 ) → {x : Fin n} → ¬ perm ⟨$⟩ˡ (suc x) ≡ zero
 sh2 perm p0=0 {x} eq with shlem→ perm p0=0 (suc x) eq
@@ -449,85 +496,123 @@ sh1 : {n  : ℕ} → (perm : Permutation (suc n) (suc n) ) → (p0=0 : perm ⟨$
 sh1 perm p0=0 {x} eq with shlem← perm p0=0 (suc x) eq
 sh1 perm p0=0 {x} eq | ()
 
+0<x→px<n : {n  : ℕ} → (x : Fin n) → (c :  0 < toℕ x ) 
+     → Data.Nat.pred (toℕ x) < n
+0<x→px<n {n} x c = sx≤py→x≤y ( begin
+     suc (suc (Data.Nat.pred (toℕ x))) ≡⟨ cong suc (sucprd c) ⟩
+     suc (toℕ x) <⟨ fin<n _  ⟩
+     suc n ∎ ) where
+        open Data.Nat.Properties.≤-Reasoning
+
+sh1p<n : {n : ℕ } → (perm : Permutation (suc n) (suc n) ) → (x : Fin n) → (c :  0 < toℕ (perm ⟨$⟩ʳ (suc x) ) ) 
+       → Data.Nat.pred (toℕ (Inverse.to perm (suc x))) < n
+sh1p<n {n} perm x c = sx≤py→x≤y ( begin
+     suc (suc (Data.Nat.pred (toℕ (Inverse.to perm (suc x))))) ≡⟨ cong suc (sucprd c) ⟩
+     suc (toℕ (Inverse.to perm (suc x))) ≤⟨ fin<n _ ⟩
+     suc n ∎ ) where
+        open Data.Nat.Properties.≤-Reasoning
+
+sh2p<n : {n : ℕ } → (perm : Permutation (suc n) (suc n) ) → (x : Fin n) → (c :  0 < toℕ (perm ⟨$⟩ˡ (suc x) ) ) 
+       → Data.Nat.pred (toℕ (Inverse.from perm (suc x))) < n
+sh2p<n {n} perm x c = sx≤py→x≤y ( begin
+     suc (suc (Data.Nat.pred (toℕ (Inverse.from perm (suc x))))) ≡⟨ cong suc (sucprd c) ⟩
+     suc (toℕ (Inverse.from perm (suc x))) ≤⟨ fin<n  _ ⟩
+     suc n ∎ ) where
+        open Data.Nat.Properties.≤-Reasoning
 
 -- 0 ∷ 1 ∷ 2 ∷ 3 ∷ [] → 0 ∷ 1 ∷ 2 ∷ [] 
 shrink : {n  : ℕ} → (perm : Permutation (suc n) (suc n) ) → perm ⟨$⟩ˡ (# 0) ≡ # 0 → Permutation n n
-shrink {n} perm p0=0  = permutation p→ p← record { left-inverse-of = piso→ ; right-inverse-of = piso← } where
+shrink {n} perm p0=0  = permutation p→ p← piso← piso→  where
 
    p→ : Fin n → Fin n 
-   p→ x with perm ⟨$⟩ʳ (suc x) | inspect (_⟨$⟩ʳ_ perm ) (suc x) 
-   p→ x | zero  | record { eq = e } = ⊥-elim ( sh1 perm p0=0 {x} e )
-   p→ x | suc t | _ = t
+   p→ x with <-fcmp (perm ⟨$⟩ʳ (suc x) ) (# 0)
+   p→ x | tri≈ ¬a b ¬c = ⊥-elim (sh1 perm p0=0 b)
+   p→ x | tri> ¬a ¬b c = fromℕ< {Data.Nat.pred (toℕ (Inverse.to perm (suc x)))} (sh1p<n perm  x c) 
 
    p← : Fin n → Fin n 
-   p← x with perm ⟨$⟩ˡ (suc x) | inspect (_⟨$⟩ˡ_ perm ) (suc x) 
-   p← x | zero  | record { eq = e } = ⊥-elim ( sh2 perm p0=0 {x} e )
-   p← x | suc t | _ = t
+   p← x with <-fcmp (perm ⟨$⟩ˡ (suc x)) (# 0)
+   p← x | tri≈ ¬a b ¬c = ⊥-elim (sh2 perm p0=0 b)
+   p← x | tri> ¬a ¬b c = fromℕ< {Data.Nat.pred (toℕ (Inverse.from perm (suc x)))} (sh2p<n perm x c)
 
+   --  using "with" something binded in ≡ is prohibited
+   --  with perm ⟨$⟩ʳ (suc q) in e generates w != Inverse.to perm (suc q) of type Fin (suc n)  error
    piso← : (x : Fin n ) → p→ ( p← x ) ≡ x
-   piso← x with perm ⟨$⟩ˡ (suc x) | inspect (_⟨$⟩ˡ_ perm ) (suc x) 
-   piso← x | zero  | record { eq = e } = ⊥-elim ( sh2 perm p0=0 {x} e )
-   piso← x | suc t | _ with perm ⟨$⟩ʳ (suc t) | inspect (_⟨$⟩ʳ_ perm ) (suc t)
-   piso← x | suc t | _ | zero |  record { eq = e } =  ⊥-elim ( sh1 perm p0=0 e )
-   piso← x | suc t |  record { eq = e0 } | suc t1 |  record { eq = e1 } = begin
-          t1
-       ≡⟨ plem0 plem1 ⟩
-          x
-       ∎ where
-          open ≡-Reasoning
-          plem0 :  suc t1 ≡ suc x → t1 ≡ x
-          plem0 refl = refl
-          plem1 :  suc t1 ≡ suc x
-          plem1 = begin
-               suc t1
-            ≡⟨ sym e1 ⟩
-               Inverse.to perm Π.⟨$⟩ suc t
-            ≡⟨ cong (λ k →  Inverse.to perm Π.⟨$⟩ k ) (sym e0) ⟩
-               Inverse.to perm Π.⟨$⟩ ( Inverse.from perm Π.⟨$⟩ suc x )
-            ≡⟨ inverseʳ perm   ⟩
-               suc x
-            ∎ 
+   piso← x = p02 _ _ refl refl  where
+      p02 : (y z : Fin n) → p← x ≡ y → p→ y ≡ z → z ≡ x
+      p02 y z px=y py=z with <-fcmp (perm ⟨$⟩ˡ (suc x)) (# 0) 
+      ... | tri≈ ¬a b ¬c = ⊥-elim (sh2 perm p0=0 b)
+      ... | tri> ¬a ¬b c with <-fcmp (perm ⟨$⟩ʳ (suc y)) (# 0) 
+      ... | tri≈ ¬a₁ b ¬c = ⊥-elim (sh1 perm p0=0 b)
+      ... | tri> ¬a₁ ¬b₁ c₁ = p08 where
+           open ≡-Reasoning 
+           p15 : toℕ (Inverse.to perm (suc y)) ∸ 1 ≡ toℕ x
+           p15 = begin
+              toℕ (Inverse.to perm (suc y)) ∸ 1  ≡⟨ cong (λ k → toℕ (Inverse.to perm (suc k))  ∸ 1   ) (sym px=y) ⟩
+              toℕ (Inverse.to perm (suc (fromℕ< (sh2p<n perm x c)))) ∸ 1  ≡⟨ cong (λ k → toℕ (Inverse.to perm k)  ∸ 1) (pred-fin _ c (sh2p<n perm x c) ) ⟩
+              toℕ (Inverse.to perm (Inverse.from perm (suc x))) ∸ 1  ≡⟨ cong (λ k → toℕ k  ∸ 1) (inverseʳ perm) ⟩
+              toℕ (suc x) ∸ 1  ≡⟨ refl ⟩
+              toℕ x ∎
+           p08 : z ≡ x
+           p08 = begin
+             z ≡⟨ sym (py=z) ⟩
+             fromℕ< {Data.Nat.pred (toℕ (Inverse.to perm (suc y)))} (sh1p<n perm  y c₁)  ≡⟨ lemma10 p15 ⟩
+             fromℕ< {toℕ x} (fin<n _)  ≡⟨ fromℕ<-toℕ _ _  ⟩
+             x ∎  
 
    piso→ : (x : Fin n ) → p← ( p→ x ) ≡ x
-   piso→ x with perm ⟨$⟩ʳ (suc x) | inspect (_⟨$⟩ʳ_ perm ) (suc x)
-   piso→ x | zero  | record { eq = e } = ⊥-elim ( sh1 perm p0=0 {x} e )
-   piso→ x | suc t | _ with perm ⟨$⟩ˡ (suc t) | inspect (_⟨$⟩ˡ_ perm ) (suc t)
-   piso→ x | suc t | _ | zero |  record { eq = e } =  ⊥-elim ( sh2 perm p0=0 e )
-   piso→ x | suc t |  record { eq = e0 } | suc t1 |  record { eq = e1 } = begin
-          t1
-       ≡⟨ plem2 plem3 ⟩
-          x
-       ∎ where
-          plem2 :  suc t1 ≡ suc x → t1 ≡ x
-          plem2 refl = refl
-          plem3 :  suc t1 ≡ suc x
-          plem3 = begin
-               suc t1
-            ≡⟨ sym e1 ⟩
-               Inverse.from perm Π.⟨$⟩ suc t
-            ≡⟨ cong (λ k →  Inverse.from perm Π.⟨$⟩ k ) (sym e0 ) ⟩
-               Inverse.from perm Π.⟨$⟩ ( Inverse.to perm Π.⟨$⟩ suc x )
-            ≡⟨ inverseˡ perm   ⟩
-               suc x
-            ∎
+   piso→ x = p02 _ _ refl refl  where
+      p02 : (y z : Fin n) → p→  x ≡ y → p← y ≡ z → z ≡ x
+      p02 y z px=y py=z with <-fcmp (perm ⟨$⟩ʳ (suc x)) (# 0) 
+      ... | tri≈ ¬a b ¬c = ⊥-elim (sh1 perm p0=0 b)
+      ... | tri> ¬a ¬b c with <-fcmp (perm ⟨$⟩ˡ (suc y)) (# 0) 
+      ... | tri≈ ¬a₁ b ¬c = ⊥-elim (sh2 perm p0=0 b)
+      ... | tri> ¬a₁ ¬b₁ c₁ = p08 where
+           open ≡-Reasoning 
+           p15 : toℕ (Inverse.from perm (suc y)) ∸ 1 ≡ toℕ x
+           p15 = begin
+              toℕ (Inverse.from perm (suc y)) ∸ 1  ≡⟨ cong (λ k → toℕ (Inverse.from perm (suc k))  ∸ 1   ) (sym px=y) ⟩
+              toℕ (Inverse.from perm (suc (fromℕ< (sh1p<n perm  x c)))) ∸ 1  ≡⟨ cong (λ k → toℕ (Inverse.from perm k)  ∸ 1) (pred-fin _ c (sh1p<n perm  x c) ) ⟩
+              toℕ (Inverse.from perm (Inverse.to perm (suc x))) ∸ 1  ≡⟨ cong (λ k → toℕ k  ∸ 1) (inverseˡ perm) ⟩
+              toℕ (suc x) ∸ 1  ≡⟨ refl ⟩
+              toℕ x ∎
+           p08 : z ≡ x
+           p08 = begin
+             z ≡⟨ sym (py=z) ⟩
+             fromℕ< {Data.Nat.pred (toℕ (Inverse.from perm (suc y)))} (sh2p<n perm y c₁)  ≡⟨ lemma10 p15 ⟩
+             fromℕ< {toℕ x} (fin<n _)  ≡⟨ fromℕ<-toℕ _ _  ⟩
+             x ∎  
 
 shrink-iso : { n : ℕ } → {perm : Permutation n n} → shrink (pprep perm)  refl =p=  perm
-shrink-iso {n} {perm} = record { peq = λ q → refl  } 
+shrink-iso {n} {perm} = record { peq = λ q → s001 q } where
+    s001 : (x : Fin n) → shrink (pprep perm) refl ⟨$⟩ʳ x ≡ perm ⟨$⟩ʳ x
+    s001 zero with <-fcmp (suc (perm ⟨$⟩ʳ zero)) (# 0) 
+    ... | tri> ¬a ¬b c = s002 where
+        s002 :  fromℕ< (≤-trans (fin<n _) (s≤s (Data.Nat.Properties.≤-reflexive refl))) ≡ perm ⟨$⟩ʳ zero
+        s002 = begin
+            fromℕ< (≤-trans (fin<n _) (s≤s (Data.Nat.Properties.≤-reflexive refl))) ≡⟨ lemma10 refl ⟩ 
+            fromℕ< (fin<n  _) ≡⟨ fromℕ<-toℕ (perm ⟨$⟩ʳ zero) (fin<n _) ⟩ 
+            perm ⟨$⟩ʳ zero ∎ where open ≡-Reasoning
+    s001 (suc x) with <-fcmp (suc (perm ⟨$⟩ʳ (suc x))) (# 0) 
+    ... | tri> ¬a ¬b c = s002 where
+        s002 :  fromℕ< (≤-trans (fin<n _) (s≤s (Data.Nat.Properties.≤-reflexive refl))) ≡ perm ⟨$⟩ʳ (suc x)
+        s002 = begin
+            fromℕ< (≤-trans (fin<n _) (s≤s (Data.Nat.Properties.≤-reflexive refl))) ≡⟨ lemma10 refl ⟩ 
+            fromℕ< (fin<n _) ≡⟨ fromℕ<-toℕ (perm ⟨$⟩ʳ (suc x)) (fin<n _) ⟩ 
+            perm ⟨$⟩ʳ (suc x) ∎ where open ≡-Reasoning
 
 shrink-iso2 : { n : ℕ } → {perm : Permutation (suc n) (suc n)} 
    → (p=0 : perm ⟨$⟩ˡ (# 0) ≡ # 0)  → pprep (shrink perm p=0) =p= perm
 shrink-iso2 {n} {perm} p=0 = record { peq =  s001 } where
     s001 : (q : Fin (suc n)) → (pprep (shrink perm p=0) ⟨$⟩ʳ q) ≡ perm ⟨$⟩ʳ q
     s001 zero = begin
-         zero
-       ≡⟨ sym ( inverseʳ perm ) ⟩
-         perm ⟨$⟩ʳ ( perm ⟨$⟩ˡ zero )
-       ≡⟨ cong (λ k → perm ⟨$⟩ʳ k ) p=0 ⟩
-         perm ⟨$⟩ʳ zero
-       ∎ 
-    s001 (suc q) with perm ⟨$⟩ʳ (suc q) | inspect (_⟨$⟩ʳ_ perm ) (suc q) 
-    ... | zero | record {eq = e}  = ⊥-elim (sh1 perm p=0 {q} e)
-    ... | suc t | e = refl
+         zero ≡⟨ sym ( inverseʳ perm ) ⟩
+         perm ⟨$⟩ʳ ( perm ⟨$⟩ˡ zero ) ≡⟨ cong (λ k → perm ⟨$⟩ʳ k ) p=0 ⟩
+         perm ⟨$⟩ʳ zero ∎ where open ≡-Reasoning 
+    s001 (suc q) with <-fcmp ((perm ⟨$⟩ʳ (suc q))) (# 0) 
+    ... | tri> ¬a ¬b c = begin
+         suc (fromℕ< (sh1p<n perm q c)) ≡⟨ pred-fin (perm ⟨$⟩ʳ suc q) c (sh1p<n perm q c)  ⟩
+         perm ⟨$⟩ʳ (suc q) ∎ where open ≡-Reasoning 
+    ... | tri≈ ¬a b ¬c = ⊥-elim (sh1 perm p=0 b)
 
 
 shrink-cong : { n : ℕ } → {x y : Permutation (suc n) (suc n)}
@@ -535,21 +620,10 @@ shrink-cong : { n : ℕ } → {x y : Permutation (suc n) (suc n)}
     → (x=0 :  x ⟨$⟩ˡ (# 0) ≡ # 0 ) → (y=0 : y ⟨$⟩ˡ (# 0) ≡ # 0 )  → shrink x x=0 =p=  shrink y y=0 
 shrink-cong {n} {x} {y} x=y x=0 y=0  = record  { peq = p002 } where
     p002 : (q : Fin n) → (shrink x x=0 ⟨$⟩ʳ q) ≡ (shrink y y=0 ⟨$⟩ʳ q)
-    p002 q with x ⟨$⟩ʳ (suc q) | inspect (_⟨$⟩ʳ_ x ) (suc q) | y ⟨$⟩ʳ (suc q) | inspect (_⟨$⟩ʳ_ y ) (suc q)
-    p002 q | zero   | record { eq = ex } | zero   | ey                  = ⊥-elim ( sh1 x x=0 ex )
-    p002 q | zero   | record { eq = ex } | suc py | ey                  = ⊥-elim ( sh1 x x=0 ex )
-    p002 q | suc px | ex                 | zero   | record { eq = ey }  = ⊥-elim ( sh1 y y=0 ey )
-    p002 q | suc px | record { eq = ex } | suc py | record { eq = ey }  = p003 ( begin
-           suc px
-         ≡⟨ sym ex ⟩
-           x ⟨$⟩ʳ (suc q)
-         ≡⟨ peq x=y (suc q) ⟩
-           y ⟨$⟩ʳ (suc q)
-         ≡⟨ ey ⟩
-           suc py
-         ∎ ) where
-        p003 : suc px ≡ suc py → px ≡ py
-        p003 refl = refl
+    p002 q with  <-fcmp (x ⟨$⟩ʳ (suc q) ) (# 0) | <-fcmp (y ⟨$⟩ʳ (suc q) ) (# 0)
+    ... | tri≈ ¬a b ¬c | _ = ⊥-elim ( sh1 x x=0 b )
+    ... | _ | tri≈ ¬a₁ b ¬c = ⊥-elim ( sh1 y y=0 b )
+    ... | tri> ¬a ¬b c | tri> ¬a' ¬b' c' = lemma10 (cong (λ k → toℕ k ∸ 1) (peq x=y _))
 
 open import FLutil
 
@@ -631,7 +705,8 @@ FL→iso {suc n} (x :: fl) = cong₂ ( λ j k → j :: k ) f001 f002 where
        pins ( toℕ≤pred[n] x ) ⟨$⟩ʳ (# 0) 
      ≡⟨ px=x x ⟩
        x 
-     ∎
+     ∎ where
+          open ≡-Reasoning 
     x=0 :  (perm ∘ₚ flip (pins (toℕ≤pred[n] x))) ⟨$⟩ˡ (# 0) ≡ # 0
     x=0 = subst ( λ k → (perm ∘ₚ flip (pins (toℕ≤pred[n] k))) ⟨$⟩ˡ (# 0) ≡ # 0 ) f001 (p=0 perm)
     x=0' : (pprep (FL→perm fl) ∘ₚ pid) ⟨$⟩ˡ (# 0) ≡ # 0
@@ -659,7 +734,8 @@ FL→iso {suc n} (x :: fl) = cong₂ ( λ j k → j :: k ) f001 f002 where
         perm→FL ( FL→perm fl ) 
      ≡⟨ FL→iso fl  ⟩
         fl 
-     ∎ 
+     ∎ where
+          open ≡-Reasoning 
 
 pcong-Fp : {n : ℕ }  → {x y : FL n}  → x ≡ y → FL→perm x =p= FL→perm y
 pcong-Fp {n} {x} {x} refl = prefl
@@ -679,6 +755,7 @@ FL←iso {suc n} perm = record { peq = λ q → ( begin
      ≡⟨⟩
         perm ⟨$⟩ʳ q
      ∎  ) } 
+      where open ≡-Reasoning 
 
 FL-inject : {n : ℕ }  → {g h : Permutation n n }  → perm→FL g ≡  perm→FL h → g =p= h
 FL-inject {n} {g} {h} g=h = record { peq = λ q → ( begin
@@ -690,6 +767,7 @@ FL-inject {n} {g} {h} g=h = record { peq = λ q → ( begin
      ≡⟨ peq (FL←iso h) q ⟩
         h ⟨$⟩ʳ q
      ∎  ) }
+      where open ≡-Reasoning 
 
 FLpid :  {n : ℕ} → (x : Permutation n n) → perm→FL x ≡ FL0 → FL→perm FL0 =p= pid   → x =p= pid
 FLpid x eq p0id = ptrans pf2 (ptrans pf0 p0id ) where
@@ -698,6 +776,21 @@ FLpid x eq p0id = ptrans pf2 (ptrans pf0 p0id ) where
    pf0 : FL→perm (perm→FL x) =p= FL→perm FL0
    pf0 = pcong-Fp eq
 
+shrink-pid : {n : ℕ} → (shrink (pid ∘ₚ flip (pins (toℕ≤pred[n] {suc n} (pid ⟨$⟩ʳ # 0)))) (p=0 pid)) =p= pid
+shrink-pid {zero}  = record { peq = λ () }
+shrink-pid {suc n} = record { peq = pf5 } where
+    pf5 :  (q : Fin (suc n)) → (shrink (pid ∘ₚ flip (pins (toℕ≤pred[n] {suc (suc n)} (pid ⟨$⟩ʳ # 0)))) (p=0 pid)) ⟨$⟩ʳ q ≡ pid ⟨$⟩ʳ q
+    pf5 zero = refl
+    pf5 (suc q) with <-fcmp ((pid ⟨$⟩ʳ (suc q))) (# 0) 
+    ... | tri> ¬a ¬b c = pf6 where
+      pf6 : suc (fromℕ< (≤-trans (fin<n {_} q) (Data.Nat.Properties.≤-reflexive refl))) ≡ suc q
+      pf6 = cong suc ( begin
+          fromℕ< (≤-trans (fin<n {_} q) (Data.Nat.Properties.≤-reflexive refl)) ≡⟨ lemma10 refl  ⟩ 
+          fromℕ< (fin<n _) ≡⟨  fromℕ<-toℕ _ (fin<n  _) ⟩ 
+          q ∎  ) where 
+             open ≡-Reasoning 
+
+
 pFL0 : {n : ℕ } → FL0 {n} ≡ perm→FL pid
 pFL0 {zero} = refl
-pFL0 {suc n} = cong (λ k → zero :: k ) pFL0
+pFL0 {suc n} = cong (λ k → zero :: k ) (trans pFL0 (pcong-pF (psym shrink-pid) )) 

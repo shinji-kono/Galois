@@ -1,4 +1,5 @@
-{-# OPTIONS --allow-unsolved-metas #-}
+{-# OPTIONS --cubical-compatible --safe #-}
+
 open import Level hiding ( suc ; zero )
 module NormalSubgroup  where
 

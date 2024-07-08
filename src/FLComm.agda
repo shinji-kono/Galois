@@ -1,4 +1,4 @@
-{-# OPTIONS --allow-unsolved-metas #-}
+{-# OPTIONS --cubical-compatible --safe #-}   
 open import Data.Nat -- using (ℕ; suc; zero; s≤s ; z≤n )
 module FLComm (n : ℕ) where
 
@@ -11,7 +11,7 @@ open import Relation.Binary.PropositionalEquality hiding ( [_] ) renaming ( sym 
 open import Data.List using (List; []; _∷_ ; length ; _++_ ; tail ) renaming (reverse to rev )
 open import Data.Product hiding (_,_ )
 open import Relation.Nullary 
-open import Data.Unit hiding (_≤_)
+open import Data.Unit -- hiding (_≤_)
 open import Data.Empty
 open import  Relation.Binary.Core 
 open import  Relation.Binary.Definitions hiding (Symmetric )
@@ -131,7 +131,7 @@ anyFL01 (suc n) = record { allFL = commList anyC ;  anyP =  anyFL02 } where
      anyC = anyComm (anyFL05 a<sa) (allFL (anyFL01 n)) (λ p q → FLpos p :: q )
      anyFL02 : (x : FL (suc (suc n))) → Any (_≡_ x) (commList anyC)
      anyFL02 (x :: y) = commAny anyC (x :: FL0) y
-                       (subst (λ k → Any (_≡_ (k :: FL0) ) _) (fromℕ<-toℕ _ _) (anyFL06 a<sa (fromℕ< x≤n) fin<n) ) (anyP (anyFL01 n) y) where
+                       (subst (λ k → Any (_≡_ (k :: FL0) ) _) (fromℕ<-toℕ _ _) (anyFL06 a<sa (fromℕ< x≤n) (fin<n _)) ) (anyP (anyFL01 n) y) where
          x≤n : suc (toℕ x)  ≤ suc (suc n)
          x≤n = toℕ<n x
 
@@ -152,23 +152,20 @@ CommFListN (suc i ) = commList (anyComm ( CommFListN i ) ( CommFListN i ) (λ p 
 
 CommStage→ : (i : ℕ) → (x : Permutation n n ) → deriving i x → Any (perm→FL x ≡_) (CommFListN i)
 CommStage→ zero x (Level.lift tt) = anyP (anyFL n) (perm→FL x)
-CommStage→ (suc i) .( [ g , h ] ) (comm {g} {h} p q) = comm2 where
+CommStage→ (suc i) ix (comm {g} {h} p q eq ) = comm2 where
   G = perm→FL g
   H = perm→FL h
-  comm3 :  perm→FL [ FL→perm G , FL→perm H ] ≡ perm→FL [ g , h ]
+  comm3 :  perm→FL [ FL→perm G , FL→perm H ] ≡ perm→FL ix
   comm3 = begin
               perm→FL [ FL→perm G , FL→perm H ] 
            ≡⟨ pcong-pF (comm-resp (FL←iso _) (FL←iso _)) ⟩
               perm→FL [ g , h ]
+           ≡⟨ pcong-pF (psym eq) ⟩
+              perm→FL ix
           ∎  where open ≡-Reasoning
-  comm2 : Any (_≡_ (perm→FL [ g , h ])) (CommFListN (suc i))
+  comm2 : Any (_≡_ (perm→FL ix)) (CommFListN (suc i))
   comm2 = subst (λ k → Any (_≡_ k) (CommFListN (suc i)) ) comm3
      ( commAny ( anyComm (CommFListN i) (CommFListN i) (λ p q →  perm→FL [ FL→perm p , FL→perm q ] )) G H (CommStage→ i g p) (CommStage→ i h q) )
-CommStage→ (suc i) x (ccong {f} {x} eq p) =
-      subst (λ k → Any (k ≡_) (commList (anyComm ( CommFListN i ) ( CommFListN i ) (λ p q →  perm→FL [ FL→perm p , FL→perm q ] ))))
-          (comm4 eq) (CommStage→ (suc i) f p ) where
-   comm4 : f =p= x →  perm→FL f ≡ perm→FL x
-   comm4 = pcong-pF
 
 CommSolved : (x : Permutation n n) → (y : FList n) → y ≡ FL0 ∷# [] → (FL→perm (FL0 {n}) =p= pid ) → Any (perm→FL x ≡_) y → x =p= pid
 CommSolved x .(cons FL0 [] (Level.lift tt)) refl eq0 (here eq) = FLpid _ eq eq0

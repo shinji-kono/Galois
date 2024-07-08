@@ -1,4 +1,7 @@
 {-# OPTIONS --guardedness #-}
+-- compile cannot use in safe
+-- {-# OPTIONS --cubical-compatible --safe #-}
+
 
 open import Level hiding ( suc ; zero )
 open import Algebra

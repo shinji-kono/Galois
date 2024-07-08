@@ -1,10 +1,10 @@
-{-# OPTIONS --without-K --safe #-}
+{-# OPTIONS --cubical-compatible --safe #-}
 module FreshUtil where
 
 open import Level using (Level; _⊔_; Lift)
 open import Data.Empty
 open import Data.Product using (∃; _,_; -,_)
-open import Data.Sum.Base using (_⊎_; [_,_]′; inj₁; inj₂)
+-- open import Data.Sum.Base using (_⊎_; [_,_]′; inj₁; inj₂)
 open import Function.Equivalence using (_⇔_; equivalence)
 open import Relation.Nullary
 import Relation.Nullary.Decidable as Dec

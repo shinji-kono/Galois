@@ -1,3 +1,6 @@
 name: Galois
-depend: standard-library
+depend: standard-library-2.0
 include: src 
+flags:
+  --warning=noUnsupportedIndexedMatch
+

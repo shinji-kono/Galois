@@ -1,3 +1,5 @@
+{-# OPTIONS --cubical-compatible  --safe #-}
+
 open import Level hiding ( suc ; zero )
 open import Algebra
 module sym5 where
@@ -192,10 +194,10 @@ open _∧_
            →  deriving n f
            →  deriving n g
            → Commutator (deriving n) [ f , g ]
-     commd {n} f g df dg =  comm {deriving n} {f} {g} df dg
+     commd {n} f g df dg =  comm {deriving n} {f} {g} df dg prefl
 
      dervie-any-3rot0 0 i<3 j<4 = lift tt 
-     dervie-any-3rot0 (suc i) i<3 j<4 = ccong {deriving i} (psym ceq) (commd dba0 aec0 df dg )where
+     dervie-any-3rot0 (suc i) i<3 j<4 = ccong _  (psym ceq) (commd dba0 aec0 df dg )where
         tc = triple i<3 j<4
         dba0 = dba (fin≤n {3} (dba0<3 tc)) (fin≤n {4} (dba1<4 tc))
         aec0 = dba (fin≤n {3} (aec0<3 tc)) (fin≤n {4} (aec1<4 tc))
@@ -205,7 +207,7 @@ open _∧_
         dg =  dervie-any-3rot1 i  (fin≤n {3} (aec0<3 tc)) (fin≤n {4} (aec1<4 tc)) 
 
      dervie-any-3rot1 0 i<3 j<4 = lift tt 
-     dervie-any-3rot1 (suc n) {i} {j} i<3 j<4 = ccong {deriving n} ( psym ceq )  (commd aec0 abc0 df dg ) where
+     dervie-any-3rot1 (suc n) {i} {j} i<3 j<4 = ccong _  ( psym ceq )  (commd aec0 abc0 df dg ) where
         tdba = dba-triple i<3 j<4
         aec0 = ins2 ((3rot ∘ₚ 3rot) ∘ₚ (3rot ∘ₚ 3rot )) (fin≤n {3} (dba0<3 tdba)) (fin≤n {4} (dba1<4 tdba))
         abc0 = ins2 ((3rot ∘ₚ 3rot) ∘ₚ (3rot ∘ₚ 3rot )) (fin≤n {3} (aec0<3 tdba)) (fin≤n {4} (aec1<4 tdba))

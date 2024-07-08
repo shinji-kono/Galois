@@ -1,4 +1,4 @@
-{-# OPTIONS --allow-unsolved-metas #-}
+{-# OPTIONS --cubical-compatible --safe #-}
 module FLutil where
 
 open import Level hiding ( suc ; zero )
@@ -33,15 +33,23 @@ FLeq refl = refl , refl
 FLpos : {n : ℕ} → FL (suc n) → Fin (suc n)
 FLpos (x :: _) = x
 
+fin-≡< :  {n : ℕ } {x : Fin n } {y : Fin n}  → x ≡ y → y Data.Fin.< x → ⊥
+fin-≡< {n} {x} {y} eq y<x with <-fcmp x y
+... | tri< a ¬b ¬c = ¬b eq
+... | tri≈ ¬a refl ¬c = nat-≡< refl y<x
+... | tri> ¬a ¬b c = ¬b eq
+                                                                
+f-≡< :  {n : ℕ } {x : FL n } {y : FL n}  → x ≡ y → y f< x → ⊥
+f-≡< eq (f<t lt2) = f-≡< (proj₂ (FLeq eq)) lt2
+f-≡< eq (f<n {_} {xn} {yn} xn<yn) = fin-≡< (proj₁ (FLeq eq)) xn<yn
+
 f-<> :  {n : ℕ } {x : FL n } {y : FL n}  → x f< y → y f< x → ⊥
 f-<> (f<n x) (f<n x₁) = nat-<> x x₁
 f-<> (f<n x) (f<t lt2) = nat-≡< refl x
-f-<> (f<t lt) (f<n x) = nat-≡< refl x
-f-<> (f<t lt) (f<t lt2) = f-<> lt lt2
-
-f-≡< :  {n : ℕ } {x : FL n } {y : FL n}  → x ≡ y → y f< x → ⊥
-f-≡< refl (f<n x) = nat-≡< refl x
-f-≡< refl (f<t lt) = f-≡< refl lt 
+f-<> (f<t {m} {xn} {xt} {yt} lt) lt2 = f-<> lt (fl00 refl lt2) where
+    fl00 : {yn : Fin (suc m) } → xn ≡ yn   → (xn :: yt) f< (yn :: xt) → yt f< xt
+    fl00 eq (f<n xn<yn) = ⊥-elim (fin-≡< (sym eq) xn<yn)
+    fl00 eq (f<t lt3) = lt3
 
 FLcmp : {n : ℕ } → Trichotomous {Level.zero} {FL n}  _≡_  _f<_
 FLcmp f0 f0 = tri≈ (λ ()) refl (λ ())

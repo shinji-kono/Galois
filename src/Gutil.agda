@@ -1,3 +1,5 @@
+{-# OPTIONS --cubical-compatible --safe #-}
+
 open import Level hiding ( suc ; zero )
 open import Algebra
 module Gutil {n m : Level} (G : Group n m ) where

@@ -1,3 +1,5 @@
+{-# OPTIONS --cubical-compatible --safe #-}
+
 module Symmetric where
 
 open import Level hiding ( suc ; zero )
@@ -22,11 +24,11 @@ fid x = x
 
 -- Data.Fin.Permutation.id
 pid : {p : ℕ } → Permutation p p
-pid = permutation fid fid record { left-inverse-of = λ x → refl ; right-inverse-of = λ x → refl }
+pid = permutation fid fid (λ x → refl) (λ x → refl) -- record { left-inverse-of = λ x → refl ; right-inverse-of = λ x → refl } 
 
 -- Data.Fin.Permutation.flip
 pinv : {p : ℕ } → Permutation p p → Permutation p p
-pinv {p} P = permutation (_⟨$⟩ˡ_ P) (_⟨$⟩ʳ_ P ) record { left-inverse-of = λ x → inverseʳ P ; right-inverse-of = λ x → inverseˡ P }
+pinv {p} P = permutation (_⟨$⟩ˡ_ P) (_⟨$⟩ʳ_ P ) (λ x → inverseˡ P ) ( λ x → inverseʳ P) -- record { left-inverse-of = λ x → inverseʳ P ; right-inverse-of = λ x → inverseˡ P }
 
 record _=p=_ {p : ℕ } ( x y : Permutation p p )  : Set where
     field
@@ -57,7 +59,13 @@ peqˡ {p} {x} {y} eq q = begin
 presp : { p : ℕ } {x y u v : Permutation p p } → x =p= y → u =p= v → (x ∘ₚ u) =p= (y ∘ₚ v)
 presp {p} {x} {y} {u} {v} x=y u=v = record { peq = λ q → lemma4 q } where
    lemma4 : (q : Fin p) → ((x ∘ₚ u) ⟨$⟩ʳ q) ≡ ((y ∘ₚ v) ⟨$⟩ʳ q)
-   lemma4 q = trans (cong (λ k → Inverse.to u Π.⟨$⟩ k) (peq x=y q) ) (peq u=v _ )
+   lemma4 q = begin
+          ((x ∘ₚ u) ⟨$⟩ʳ q) ≡⟨ peq u=v _ ⟩
+          ((x ∘ₚ v) ⟨$⟩ʳ q) ≡⟨ cong (λ k → Inverse.to v k  ) (peq x=y _) ⟩
+          ((y ∘ₚ v) ⟨$⟩ʳ q) ∎  
+     where 
+       open ≡-Reasoning
+   -- lemma4 q = trans (cong (λ k → Inverse.to u Π.⟨$⟩ k) (peq x=y q) ) (peq u=v _ )
 passoc : { p : ℕ } (x y z : Permutation p p) → ((x ∘ₚ y) ∘ₚ z) =p=  (x ∘ₚ (y ∘ₚ z))
 passoc x y z = record { peq = λ q → refl }
 p-inv : { p : ℕ } {i j : Permutation p p} →  i =p= j → (q : Fin p) → pinv i ⟨$⟩ʳ q ≡ pinv j ⟨$⟩ʳ q

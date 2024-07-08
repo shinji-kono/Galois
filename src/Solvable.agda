@@ -1,4 +1,5 @@
-{-# OPTIONS --allow-unsolved-metas #-}
+{-# OPTIONS --cubical-compatible --safe #-} 
+
 open import Level hiding ( suc ; zero )
 open import Algebra
 module Solvable {n m : Level} (G : Group n m ) where
@@ -20,18 +21,20 @@ open import Gutil G
 [ g , h ] = g ⁻¹ ∙ h ⁻¹ ∙ g ∙ h 
 
 data Commutator (P : Carrier → Set (Level.suc n ⊔ m)) : (f : Carrier) → Set (Level.suc n ⊔ m) where
-  comm  : {g h : Carrier} → P g → P h  → Commutator P [ g , h ] 
-  ccong : {f g : Carrier} → f ≈ g → Commutator P f → Commutator P g
+  comm  : {g h i : Carrier} → P g → P h  → i ≈ [ g , h ] → Commutator P  i
+
+ccong : (P : Carrier → Set (Level.suc n ⊔ m)) {f g : Carrier} → f ≈ g → Commutator P f → Commutator P g
+ccong P {f} {g} f=g (comm {g1} {h} {i} pg  ph f=gh ) = comm pg ph (gtrans (gsym f=g) f=gh)
 
 deriving : ( i : ℕ ) → Carrier → Set (Level.suc n ⊔ m)
 deriving 0 x = Lift (Level.suc n ⊔ m) ⊤
 deriving (suc i) x = Commutator (deriving i) x 
 
-open import Relation.Binary.HeterogeneousEquality as HE using (_≅_ )
+-- open import Relation.Binary.HeterogeneousEquality as HE using (_≅_ )
 
 deriving-subst : { i : ℕ } → {x y : Carrier } → x ≈ y → (dx : deriving i x ) → deriving i y 
 deriving-subst {zero} {x} {y} x=y dx = lift tt
-deriving-subst {suc i} {x} {y} x=y dx = ccong x=y dx
+deriving-subst {suc i} {x} {y} x=y (comm ig ih x=gh) = comm ig ih (gtrans (gsym x=y) x=gh)
 
 record solvable : Set (Level.suc n ⊔ m) where
   field 
@@ -61,8 +64,7 @@ lemma4 g h = begin
 
 deriving-inv : { i : ℕ } → { x  : Carrier } → deriving i x → deriving i ( x ⁻¹ )
 deriving-inv {zero} {x} (lift tt) = lift tt
-deriving-inv {suc i} {_} (comm x x₁ )   = ccong (lemma4 _ _) (comm x₁ x) 
-deriving-inv {suc i} {x} (ccong eq ix ) = ccong (⁻¹-cong eq) ( deriving-inv ix )
+deriving-inv {suc i} {x} (comm ig ih x=gh )   = comm ih ig (gtrans (⁻¹-cong x=gh) (gsym (lemma4 _ _)))
 
 idcomtr : (g  : Carrier ) → [ g , ε  ] ≈ ε 
 idcomtr g  = begin
@@ -84,7 +86,7 @@ idcomtl g  = begin
 
 deriving-ε : { i : ℕ } → deriving i ε
 deriving-ε {zero} = lift tt
-deriving-ε {suc i} = ccong (idcomtr ε) (comm deriving-ε deriving-ε) 
+deriving-ε {suc i} = comm (deriving-ε {i}) (deriving-ε {i}) (gsym (idcomtr ε))
 
 comm-refl : {f g : Carrier } → f ≈ g  → [ f ,  g ] ≈ ε 
 comm-refl {f} {g} f=g = begin
@@ -110,7 +112,9 @@ open import Algebra.Morphism.Structures
 
 Pcomm : {a b : Carrier} → (i : ℕ) → deriving i a → deriving i (b ∙ (a ∙ b ⁻¹ ))
 Pcomm {a} {b} zero (lift tt) = lift tt
-Pcomm {.([ _ , _ ])} {b} (suc i) (comm {g} {h} pg ph ) = ccong cc2 (comm (Pcomm {_} {b} i pg) (Pcomm {_} {b} i ph)) where
+Pcomm {a} {b} (suc i) (comm {g} {h} pg ph eq ) = comm (Pcomm {_} {b} i pg) (Pcomm {_} {b} i ph) (gtrans cc3 (gsym cc2)) where
+   cc3 : b ∙ (a ∙ b ⁻¹) ≈ b ∙ ([ g , h ] ∙ b ⁻¹)
+   cc3 = cdr (car eq ) 
    cc2 : [ b ∙ (g ∙ b ⁻¹) , b ∙ (h ∙ b ⁻¹) ] ≈ b ∙ ([ g , h ] ∙ b ⁻¹)
    cc2 = begin
     [ b ∙ (g ∙ b ⁻¹) , b ∙ (h ∙ b ⁻¹) ] ≈⟨ grefl ⟩ 
@@ -132,7 +136,6 @@ Pcomm {.([ _ , _ ])} {b} (suc i) (comm {g} {h} pg ph ) = ccong cc2 (comm (Pcomm 
     ((b  ∙ g ⁻¹ )  ∙ h ⁻¹ ) ∙ (g ∙ (h ∙ b ⁻¹)) ≈⟨ solve monoid ⟩ 
     b ∙ (( g ⁻¹ ∙ h ⁻¹ ∙ g ∙ h ) ∙ b ⁻¹) ≈⟨ grefl ⟩
     b ∙ ([ g , h ] ∙ b ⁻¹) ∎
-Pcomm {a} {b} (suc i) (ccong f=a pa) = ccong (∙-cong grefl (∙-cong f=a grefl)) (Pcomm {_} {b} (suc i) pa)
 
 -- Finitely Generated Commutator is normal subgroup of G
 
