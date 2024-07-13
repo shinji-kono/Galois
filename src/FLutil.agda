@@ -10,7 +10,7 @@ open import Data.Nat.Properties as DNP
 open import Relation.Binary.PropositionalEquality hiding ( [_] )
 open import Data.List using (List; []; _∷_ ; length ; _++_ ; tail ) renaming (reverse to rev )
 open import Data.Product
-open import Relation.Nullary
+open import Relation.Nullary as RNu hiding ( ⌊_⌋ ; toWitness ; fromWitness ) 
 open import Data.Empty
 open import  Relation.Binary.Core
 open import  Relation.Binary.Definitions 
@@ -174,7 +174,7 @@ tt5 = plist→FL {4} (FL→plist tt0)
 
 open import Relation.Binary as B hiding (Decidable; _⇔_)
 open import Data.Sum.Base as Sum --  inj₁
-open import Relation.Nary using (⌊_⌋)
+open import Relation.Nary -- hiding (⌊_⌋)
 open import Data.List.Fresh hiding ([_])
 
 FList : (n : ℕ ) → Set
@@ -190,7 +190,7 @@ fr1 =
    []
 
 open import Data.Product
-open import Relation.Nullary.Decidable hiding (⌊_⌋)
+-- open import Relation.Nullary.Decidable hiding (⌊_⌋)
 -- open import Data.Bool hiding (_<_ ; _≤_ )
 open import Data.Unit.Base using (⊤ ; tt)
 
@@ -205,9 +205,9 @@ open import Data.Unit.Base using (⊤ ; tt)
 
 ttf : {n : ℕ } {x a : FL (n)} → x f< a → (y : FList (n)) →  fresh (FL (n)) ⌊ _f<?_ ⌋  a y  → fresh (FL (n)) ⌊ _f<?_ ⌋  x y
 ttf _ [] fr = Level.lift tt
-ttf {_} {x} {a} lt (cons a₁ y x1) (lift lt1 , x2 ) = (Level.lift (fromWitness (ttf1 lt1 lt ))) , ttf (ttf1 lt1 lt) y x1 where 
+ttf {_} {x} {a} lt (cons a₁ y x1) (lift lt1 , x2 ) = (Level.lift (RNu.fromWitness (ttf1 lt1 lt ))) , ttf (ttf1 lt1 lt) y x1 where 
        ttf1 : True (a f<? a₁) → x f< a  → x f< a₁
-       ttf1 t x<a = f<-trans x<a (toWitness t)
+       ttf1 t x<a = f<-trans x<a (RNu.toWitness t)
 
 -- by https://gist.github.com/aristidb/1684202
 
@@ -218,20 +218,20 @@ FLinsert {zero} f0 y = f0 ∷# []
 FLinsert {suc n} x [] = x ∷# []
 FLinsert {suc n} x (cons a y x₁) with FLcmp x a
 ... | tri≈ ¬a b ¬c  = cons a y x₁
-... | tri< lt ¬b ¬c  = cons x ( cons a y x₁) ( Level.lift (fromWitness lt ) , ttf lt y  x₁) 
-FLinsert {suc n} x (cons a [] x₁) | tri> ¬a ¬b lt  = cons a ( x  ∷# []  ) ( Level.lift (fromWitness lt) , Level.lift tt )
+... | tri< lt ¬b ¬c  = cons x ( cons a y x₁) ( Level.lift (RNu.fromWitness lt ) , ttf lt y  x₁) 
+FLinsert {suc n} x (cons a [] x₁) | tri> ¬a ¬b lt  = cons a ( x  ∷# []  ) ( Level.lift (RNu.fromWitness lt) , Level.lift tt )
 FLinsert {suc n} x (cons a y yr)  | tri> ¬a ¬b a<x = cons a (FLinsert x y) (FLfresh a x y a<x yr )
 
-FLfresh a x [] a<x (Level.lift tt) = Level.lift (fromWitness a<x) , Level.lift tt
+FLfresh a x [] a<x (Level.lift tt) = Level.lift (RNu.fromWitness a<x) , Level.lift tt
 FLfresh a x (cons b [] (Level.lift tt)) a<x (Level.lift a<b , a<y) with FLcmp x b
-... | tri< x<b ¬b ¬c  = Level.lift (fromWitness a<x) , Level.lift a<b , Level.lift tt
-... | tri≈ ¬a refl ¬c = Level.lift (fromWitness a<x) , Level.lift tt
-... | tri> ¬a ¬b b<x =  Level.lift a<b  ,  Level.lift (fromWitness  (f<-trans (toWitness a<b) b<x))  , Level.lift tt
+... | tri< x<b ¬b ¬c  = Level.lift (RNu.fromWitness a<x) , Level.lift a<b , Level.lift tt
+... | tri≈ ¬a refl ¬c = Level.lift (RNu.fromWitness a<x) , Level.lift tt
+... | tri> ¬a ¬b b<x =  Level.lift a<b  ,  Level.lift (RNu.fromWitness  (f<-trans (RNu.toWitness a<b) b<x))  , Level.lift tt
 FLfresh a x (cons b y br) a<x (Level.lift a<b , a<y) with FLcmp x b
-... | tri< x<b ¬b ¬c =  Level.lift (fromWitness a<x) , Level.lift a<b , ttf (toWitness a<b) y br
-... | tri≈ ¬a refl ¬c = Level.lift (fromWitness a<x) , ttf a<x y br
+... | tri< x<b ¬b ¬c =  Level.lift (RNu.fromWitness a<x) , Level.lift a<b , ttf (RNu.toWitness a<b) y br
+... | tri≈ ¬a refl ¬c = Level.lift (RNu.fromWitness a<x) , ttf a<x y br
 FLfresh a x (cons b [] br) a<x (Level.lift a<b , a<y) | tri> ¬a ¬b b<x =
-    Level.lift a<b , Level.lift (fromWitness (f<-trans (toWitness a<b) b<x)) , Level.lift tt
+    Level.lift a<b , Level.lift (RNu.fromWitness (f<-trans (RNu.toWitness a<b) b<x)) , Level.lift tt
 FLfresh a x (cons b (cons a₁ y x₁) br) a<x (Level.lift a<b , a<y) | tri> ¬a ¬b b<x =
     Level.lift a<b , FLfresh a x (cons a₁ y x₁) a<x a<y
 

@@ -10,9 +10,7 @@ open import Data.Fin.Properties hiding ( <-trans ; ≤-trans ) renaming ( <-cmp 
 open import Data.Product
 open import Data.Fin.Permutation
 open import Function hiding (id ; flip)
-open import Function.Inverse as Inverse using (_↔_; Inverse; _InverseOf_)
-open import Function.LeftInverse  using ( _LeftInverseOf_ )
-open import Function.Equality using (Π)
+open import Function.Bundles -- using ( _↔_; Inverse; _InverseOf_ ; _LeftInverseOf_ )
 open import Data.Nat -- using (ℕ; suc; zero; s≤s ; z≤n )
 open import Data.Nat.Properties -- using (<-trans)
 open import Relation.Binary.PropositionalEquality 

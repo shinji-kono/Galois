@@ -103,15 +103,16 @@ lemma12 {suc n} {suc m} (s≤s n<m) (suc f) refl =  cong suc ( lemma12 {n} {m} n
 -- lemma8 {zero} {zero} {suc n} refl {s≤s z≤n} {s≤s z≤n} = HE.refl
 -- lemma8 {suc i} {suc i} {suc n} refl {s≤s i<n} {s≤s j<n} = HE.cong (λ k → s≤s k ) ( lemma8 {i} {i} {n} refl  )
 
-lemma10 : {n i j  : ℕ } → ( i ≡ j ) → {i<n : i < n } → {j<n : j < n }  → fromℕ< i<n ≡ fromℕ< j<n
-lemma10 {.(suc _)} {zero} {zero} refl {s≤s z≤n} {s≤s z≤n} = refl
-lemma10 {suc n} {suc i} {suc i} refl {s≤s i<n} {s≤s j<n} = cong suc (lemma10 {n} {i} {i} refl {i<n} {j<n})
+-- fromℕ<-cong 
+lemma10 : {n i j  : ℕ } → ( i ≡ j ) → (i<n : i < n ) → (j<n : j < n )  → fromℕ< i<n ≡ fromℕ< j<n
+lemma10 {.(suc _)} {zero} {zero} refl (s≤s z≤n) (s≤s z≤n) = refl
+lemma10 {suc n} {suc i} {suc i} refl (s≤s i<n) (s≤s j<n) = cong suc (lemma10 {n} {i} {i} refl i<n j<n)
 
 fpred-comm : {n : ℕ } → (x : Fin n) → toℕ (Data.Fin.pred x) ≡ toℕ x ∸ 1
 fpred-comm {suc n} zero = refl
 fpred-comm {suc n} (suc x) = begin
        toℕ (Data.Fin.pred (suc x)) ≡⟨ sym ( toℕ-fromℕ< _ ) ⟩
-       toℕ (fromℕ< (fin<n _) ) ≡⟨ cong toℕ (lemma10 (toℕ-inject₁ _ ) ) ⟩
+       toℕ (fromℕ< (fin<n _) ) ≡⟨ cong toℕ (lemma10 (toℕ-inject₁ _ ) (fin<n _) (<-trans (fin<n _) a<sa) ) ⟩
        toℕ (fromℕ< (<-trans (fin<n _) a<sa) ) ≡⟨  toℕ-fromℕ< _ ⟩
        toℕ (suc x) ∸ 1 ∎  where open ≡-Reasoning
 

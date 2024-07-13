@@ -6,7 +6,7 @@ module sym2 where
 
 open import Symmetric 
 open import Data.Unit
-open import Function.Inverse as Inverse using (_↔_; Inverse; _InverseOf_)
+open import Function.Bundles --  as Inverse using (_↔_; Inverse; _InverseOf_)
 open import Function
 open import Data.Nat hiding (_⊔_) -- using (ℕ; suc; zero)
 open import Relation.Nullary
