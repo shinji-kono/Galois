@@ -12,6 +12,8 @@ open import Data.List using (List; []; _∷_ ; length ; _++_ ; tail ) renaming (
 open import Data.Product
 open import Relation.Nullary as RNu hiding ( ⌊_⌋ ; toWitness ; fromWitness ) 
 open import Data.Empty
+open import Data.Maybe
+open import Data.Maybe.Properties
 open import  Relation.Binary.Core
 open import  Relation.Binary.Definitions 
 open import logic
@@ -27,11 +29,26 @@ data _f<_  : {n : ℕ } (x : FL n ) (y : FL n)  → Set  where
    f<n : {m : ℕ } {xn yn : Fin (suc m) } {xt yt : FL m} → xn Data.Fin.< yn →   (xn :: xt) f< ( yn :: yt )
    f<t : {m : ℕ } {xn : Fin (suc m) } {xt yt : FL m} → xt f< yt →   (xn :: xt) f< ( xn :: yt )
 
+proj1-FL : {n : ℕ } → FL n → Maybe (Fin n) 
+proj1-FL f0 = nothing
+proj1-FL (x :: fl) = just x
+
+proj2-FL : {n : ℕ } → FL n → Maybe (FL (Data.Nat.pred n))
+proj2-FL f0 = nothing
+proj2-FL (x :: fl) = just fl
+
 FLeq : {n : ℕ } {xn yn : Fin (suc n)} {x : FL n } {y : FL n}  → xn :: x ≡ yn :: y → ( xn ≡ yn )  × (x ≡ y )
-FLeq refl = refl , refl 
+FLeq {n} {xn} {yn} {x} {y} eq = (just-injective (cong proj1-FL eq)) , (just-injective (cong proj2-FL eq)) 
+
+proj1-FL-0 : (n : ℕ ) → (fl : FL n ) → proj1-FL fl ≡ nothing → n ≡ 0
+proj1-FL-0 n f0 eq = refl       -- we cannot put n ≡ 0
+proj1-FL-0 (suc n) (x :: fl) ()
 
 FLpos : {n : ℕ} → FL (suc n) → Fin (suc n)
-FLpos (x :: _) = x
+FLpos {n} fl = lemma (suc n) (s≤s z≤n) fl  where
+    lemma : (m : ℕ ) → 0 < m → FL m → Fin m
+    lemma n () f0 
+    lemma (suc _) 0<m (x :: fl) = x
 
 fin-≡< :  {n : ℕ } {x : Fin n } {y : Fin n}  → x ≡ y → y Data.Fin.< x → ⊥
 fin-≡< {n} {x} {y} eq y<x with <-fcmp x y
@@ -44,12 +61,13 @@ f-≡< eq (f<t lt2) = f-≡< (proj₂ (FLeq eq)) lt2
 f-≡< eq (f<n {_} {xn} {yn} xn<yn) = fin-≡< (proj₁ (FLeq eq)) xn<yn
 
 f-<> :  {n : ℕ } {x : FL n } {y : FL n}  → x f< y → y f< x → ⊥
-f-<> (f<n x) (f<n x₁) = nat-<> x x₁
-f-<> (f<n x) (f<t lt2) = nat-≡< refl x
-f-<> (f<t {m} {xn} {xt} {yt} lt) lt2 = f-<> lt (fl00 refl lt2) where
-    fl00 : {yn : Fin (suc m) } → xn ≡ yn   → (xn :: yt) f< (yn :: xt) → yt f< xt
-    fl00 eq (f<n xn<yn) = ⊥-elim (fin-≡< (sym eq) xn<yn)
-    fl00 eq (f<t lt3) = lt3
+f-<> {zero} {x} {y} ()
+f-<> {suc n} {x} {y} x<y y<x = lemma x x<y y<x refl where
+   lemma : {n : ℕ } {x y : FL (suc n)} (x1 : FL (suc n)) → (x<y : x f< y) (y<x : y f< x1) → x ≡ x1 → ⊥
+   lemma _ (f<n x) (f<n x₁) refl = nat-<> x x₁
+   lemma _ (f<n x) (f<t lt2) refl = nat-≡< refl x
+   lemma _ (f<t ltx) (f<n x) refl = nat-≡< refl x
+   lemma _ (f<t ltx) (f<t lty) eq = f-<> ltx (subst (λ k → _ f< k ) (proj₂ (FLeq (sym eq))) lty)
 
 FLcmp : {n : ℕ } → Trichotomous {Level.zero} {FL n}  _≡_  _f<_
 FLcmp f0 f0 = tri≈ (λ ()) refl (λ ())

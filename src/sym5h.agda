@@ -101,7 +101,7 @@ open _∧_
            s12 : abc ≡ perm→FL [ dba , aec ]  
            s12 = refl
            s11 : FL→perm abc =p= [ dba , aec ]  
-           s11 = ptrans (pcong-Fp s12 ) ? -- (FL←iso _)    -- this takes a long time
+           s11 = ptrans (pcong-Fp s12 ) (FL←iso _)    -- this takes a long time
            s17 : deriving  (suc i) ( FL→perm abc )
            s17 = ccong _ (psym s11) (comm (Pcomm {_} {FL→perm dc} i (deriving-inv s10)) (Pcomm {_} {FL→perm be} i s10) prefl )
 

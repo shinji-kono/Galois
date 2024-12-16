@@ -169,3 +169,4 @@ CommStage→ (suc i) ix (comm {g} {h} p q eq ) = comm2 where
 
 CommSolved : (x : Permutation n n) → (y : FList n) → y ≡ FL0 ∷# [] → (FL→perm (FL0 {n}) =p= pid ) → Any (perm→FL x ≡_) y → x =p= pid
 CommSolved x .(cons FL0 [] (Level.lift tt)) refl eq0 (here eq) = FLpid _ eq eq0
+

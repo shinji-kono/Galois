@@ -789,16 +789,16 @@ FLpid x eq p0id = ptrans pf2 (ptrans pf0 p0id ) where
 shrink-pid : {n : ℕ} → (shrink (pid ∘ₚ flip (pins (toℕ≤pred[n] {suc n} (pid ⟨$⟩ʳ # 0)))) (p=0 pid)) =p= pid
 shrink-pid {zero}  = record { peq = λ () }
 shrink-pid {suc n} = record { peq = pf5 } where
-    pf5 :  (q : Fin (suc n)) → (shrink (pid ∘ₚ flip (pins (toℕ≤pred[n] {suc (suc n)} (pid ⟨$⟩ʳ # 0)))) (p=0 pid)) ⟨$⟩ʳ q ≡ pid ⟨$⟩ʳ q
-    pf5 zero = refl
-    pf5 (suc q) with <-fcmp ((pid ⟨$⟩ʳ (suc q))) (# 0) 
-    ... | tri> ¬a ¬b c = pf6 where
-      pf6 : suc (fromℕ< (≤-trans (fin<n {_} q) (Data.Nat.Properties.≤-reflexive refl))) ≡ suc q
-      pf6 = cong suc ( begin
-          fromℕ< (≤-trans (fin<n {_} q) (Data.Nat.Properties.≤-reflexive refl)) ≡⟨ lemma10 refl (≤-trans (fin<n {_} q) (Data.Nat.Properties.≤-reflexive refl)) (fin<n _)  ⟩ 
-          fromℕ< (fin<n _) ≡⟨  fromℕ<-toℕ _ (fin<n  _) ⟩ 
-          q ∎  ) where 
-             open ≡-Reasoning 
+   pf5 :  (q : Fin (suc n)) → (shrink (pid ∘ₚ flip (pins (toℕ≤pred[n] {suc (suc n)} (pid ⟨$⟩ʳ # 0)))) (p=0 pid)) ⟨$⟩ʳ q ≡ pid ⟨$⟩ʳ q
+   pf5 zero = refl
+   pf5 (suc q) with <-fcmp ((pid ⟨$⟩ʳ (suc q))) (# 0) 
+   ... | tri> ¬a ¬b c = pf6 where
+     pf6 : suc (fromℕ< (≤-trans (fin<n {_} q) (Data.Nat.Properties.≤-reflexive refl))) ≡ suc q
+     pf6 = cong suc ( begin
+         fromℕ< (≤-trans (fin<n {_} q) (Data.Nat.Properties.≤-reflexive refl)) ≡⟨ lemma10 refl (≤-trans (fin<n {_} q) (Data.Nat.Properties.≤-reflexive refl)) (fin<n _)  ⟩ 
+         fromℕ< (fin<n _) ≡⟨  fromℕ<-toℕ _ (fin<n  _) ⟩ 
+         q ∎  ) where 
+            open ≡-Reasoning 
 
 
 pFL0 : {n : ℕ } → FL0 {n} ≡ perm→FL pid
